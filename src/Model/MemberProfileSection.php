@@ -100,7 +100,7 @@ class MemberProfileSection extends DataObject
      *
      * @return string
      */
-    public function getDefaultTitle(): never
+    public function getDefaultTitle(): string
     {
         throw new Exception("Please implement getDefaultTitle() on {get_class($this)}.");
     }
@@ -121,7 +121,7 @@ class MemberProfileSection extends DataObject
      * @return string
      */
     #[Override]
-    public function forTemplate()
+    public function forTemplate(): string
     {
         throw new Exception("Please implement forTemplate() on {get_class($this)}.");
     }

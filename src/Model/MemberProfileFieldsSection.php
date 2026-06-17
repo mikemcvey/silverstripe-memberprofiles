@@ -17,13 +17,13 @@ class MemberProfileFieldsSection extends MemberProfileSection
 {
     private static $table_name = 'MemberProfileFieldsSection';
 
-    public function getDefaultTitle()
+    public function getDefaultTitle(): string
     {
         return _t('MemberProfiles.PROFILEFIELDSLIST', 'Profile Fields List');
     }
 
     #[Override]
-    public function forTemplate()
+    public function forTemplate(): string
     {
         return $this->renderWith(MemberProfileFieldsSection::class);
     }
