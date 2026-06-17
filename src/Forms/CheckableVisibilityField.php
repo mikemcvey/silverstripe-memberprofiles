@@ -33,10 +33,7 @@ class CheckableVisibilityField extends FormField
      */
     private $checkbox;
 
-    /**
-     * @var boolean
-     */
-    private $alwaysVisible = false;
+    private bool $alwaysVisible = false;
 
     /**
      * @param FormField $child
@@ -46,7 +43,7 @@ class CheckableVisibilityField extends FormField
         parent::__construct($child->getName());
 
         $this->child    = $child;
-        $this->checkbox = CheckboxField::create("Visible[{$this->name}]", '');
+        $this->checkbox = CheckboxField::create(sprintf('Visible[%s]', $this->name), '');
     }
 
     /**
@@ -68,7 +65,7 @@ class CheckableVisibilityField extends FormField
     /**
      * @return $this
      */
-    public function makeAlwaysVisible()
+    public function makeAlwaysVisible(): static
     {
         $this->alwaysVisible = true;
         $this->getCheckbox()->setValue(true);

@@ -61,7 +61,7 @@ use Symbiote\MemberProfiles\Forms\MemberProfileValidator;
  */
 class MemberProfilePageController extends PageController
 {
-    private static $allowed_actions = [
+    private static array $allowed_actions = [
         'index',
         'RegisterForm',
         'afterregistration',
@@ -75,7 +75,7 @@ class MemberProfilePageController extends PageController
     /**
      * @return HTTPResponse
      */
-    public function index(HTTPRequest $request)
+    public function index(HTTPRequest $request): HTTPResponse|ModelData
     {
         $backURL = $request->getVar('BackURL');
         if ($backURL) {
@@ -91,7 +91,7 @@ class MemberProfilePageController extends PageController
      *
      * @return HTTPResponse|ModelDataCustomised
      */
-    protected function indexRegister()
+    protected function indexRegister(): HTTPResponse|ModelData
     {
         if (!$this->AllowRegistration) {
             return Security::permissionFailure($this, _t(
@@ -119,7 +119,7 @@ class MemberProfilePageController extends PageController
      *
      * @return HTTPResponse|ModelDataCustomised
      */
-    protected function indexProfile()
+    protected function indexProfile(): HTTPResponse|ModelData
     {
         if (!$this->AllowProfileEditing) {
             if ($this->AllowAdding && Injector::inst()->get(Member::class)->canCreate()) {
@@ -188,6 +188,7 @@ class MemberProfilePageController extends PageController
             && $form->hasExtension(FormSpamProtectionExtension::class)) {
             $form->enableSpamProtection();
         }
+
         $this->extend('updateRegisterForm', $form);
         return $form;
     }
@@ -195,7 +196,7 @@ class MemberProfilePageController extends PageController
     /**
      * Handles validation and saving new Member objects, as well as sending out validation emails.
      */
-    public function register($data, Form $form)
+    public function register($data, Form $form): ?HTTPResponse
     {
         $member = $this->addMember($form);
         if (!$member) {
@@ -210,7 +211,7 @@ class MemberProfilePageController extends PageController
         if ($this->RegistrationRedirect) {
             if ($this->PostRegistrationTargetID) {
                 $this->redirect($this->PostRegistrationTarget()->Link());
-                return;
+                return null;
             }
 
             $session = $this->getRequest()->getSession();
@@ -228,10 +229,8 @@ class MemberProfilePageController extends PageController
 
     /**
      * Returns the after registration content to the user.
-     *
-     * @return array
      */
-    public function afterregistration()
+    public function afterregistration(): array
     {
         return [
             'Title'   => $this->obj('AfterRegistrationTitle'),
@@ -253,7 +252,7 @@ class MemberProfilePageController extends PageController
     /**
      * Updates an existing Member's profile.
      */
-    public function save(array $data, Form $form)
+    public function save(array $data, Form $form): HTTPResponse
     {
         $member = Security::getCurrentUser();
 
@@ -264,15 +263,16 @@ class MemberProfilePageController extends PageController
 
         try {
             $member->write();
-        } catch (ValidationException $e) {
+        } catch (ValidationException $validationException) {
             $messages = [];
-            foreach ($e->getResult()->getMessages() as $message) {
+            foreach ($validationException->getResult()->getMessages() as $message) {
                 if (is_array($message) && isset($message['message'])) {
                     $messages[] = $message['message'];
                 } elseif (is_string($message)) {
                     $messages[] = $message;
                 }
             }
+
             $validationMessages = implode("; ", $messages);
             $form->sessionMessage($validationMessages, 'bad');
             return $this->redirectBack();
@@ -290,7 +290,7 @@ class MemberProfilePageController extends PageController
      * Allows members with the appropriate permissions to add/regsiter other
      * members.
      */
-    public function add($request)
+    public function add($request): HTTPResponse|ModelData
     {
         if (!$this->AllowAdding || !Injector::inst()->get(Member::class)->canCreate()) {
             return Security::permissionFailure($this, _t(
@@ -323,7 +323,7 @@ class MemberProfilePageController extends PageController
     /**
      * Saves an add member form submission into a new member object.
      */
-    public function doAdd($data, $form)
+    public function doAdd($data, $form): HTTPResponse
     {
         if ($this->addMember($form)) {
             $form->sessionMessage(
@@ -335,7 +335,7 @@ class MemberProfilePageController extends PageController
         return $this->redirectBack();
     }
 
-    public function LoginLink()
+    public function LoginLink(): string
     {
         return Controller::join_links(
             Injector::inst()->get(Security::class)->Link(),
@@ -351,9 +351,6 @@ class MemberProfilePageController extends PageController
      * This works around the problem with the checkboxsetfield which doesn't validate that the
      * groups that the user has selected are not validated against the list of groups the user is
      * allowed to choose from.
-     *
-     * @param Form   $form
-     * @param Member $member
      */
     protected function getSettableGroupIdsFrom(Form $form, Member $member = null)
     {
@@ -363,7 +360,8 @@ class MemberProfilePageController extends PageController
         // ourselves, but that's okay
         $groupField = $form->Fields()->dataFieldByName('Groups');
         // The list of selectable groups
-        $groupIds = $allowedIds = $this->SelectableGroups()->map('ID', 'ID')->toArray();
+        $groupIds = $this->SelectableGroups()->map('ID', 'ID')->toArray();
+        $allowedIds = $groupIds;
 
         // we need to track the selected groups against the existing user's groups - this is
         // so that we don't accidentally remove them from the list of groups
@@ -391,6 +389,7 @@ class MemberProfilePageController extends PageController
                     }
                 }
             }
+
             $form->Fields()->removeByName('Groups');
         }
 
@@ -411,7 +410,6 @@ class MemberProfilePageController extends PageController
      * Allows the user to confirm their account by clicking on the validation link in
      * the confirmation email.
      *
-     * @param HTTPRequest $request
      * @return array|HTTPResponse
      */
     public function confirm(HTTPRequest $request)
@@ -432,6 +430,7 @@ class MemberProfilePageController extends PageController
                     'Your account is already confirmed.'
                 ));
             }
+
             return Security::permissionFailure($this, _t(
                 'MemberProfiles.CANNOTCONFIRMLOGGEDIN',
                 'You cannot confirm account while you are logged in.'
@@ -452,6 +451,7 @@ class MemberProfilePageController extends PageController
         if (!$member) {
             return $this->invalidRequest('Member #' . $id . ' does not exist.');
         }
+
         if (!$member->NeedsValidation) {
             // NOTE(Jake): 2018-05-03
             //
@@ -461,9 +461,11 @@ class MemberProfilePageController extends PageController
             //
             return $this->invalidRequest('Member #' . $id . ' does not need validation.');
         }
+
         if (!$member->ValidationKey) {
             return $this->invalidRequest('Member #' . $id . ' does not have a validation key.');
         }
+
         if ($member->ValidationKey !== $key) {
             return $this->invalidRequest('Validation key does not match.');
         }
@@ -481,6 +483,7 @@ class MemberProfilePageController extends PageController
                 'Content' => $validationMessages ? $validationMessages[0]['message'] : _t('MemberProfiles.ERRORCONFIRMATION', 'An unexpected error occurred.'),
             ];
         }
+
         $member->write();
 
         $this->extend('onConfirm', $member);
@@ -497,10 +500,7 @@ class MemberProfilePageController extends PageController
         ];
     }
 
-    /**
-     * @return array
-     */
-    protected function invalidRequest($debugText)
+    protected function invalidRequest(string $debugText): array
     {
         $additionalText = '';
         if (Director::isDev()) {
@@ -528,7 +528,7 @@ class MemberProfilePageController extends PageController
      *
      * @return Member|null
      */
-    protected function addMember($form)
+    protected function addMember(Form $form)
     {
         $member   = Member::create();
         $groupIds = $this->getSettableGroupIdsFrom($form);
@@ -541,15 +541,16 @@ class MemberProfilePageController extends PageController
 
         try {
             $member->write();
-        } catch (ValidationException $e) {
+        } catch (ValidationException $validationException) {
             $messages = [];
-            foreach ($e->getResult()->getMessages() as $message) {
+            foreach ($validationException->getResult()->getMessages() as $message) {
                 if (is_array($message) && isset($message['message'])) {
                     $messages[] = $message['message'];
                 } elseif (is_string($message)) {
                     $messages[] = $message;
                 }
             }
+
             $validationMessages = implode("; ", $messages);
             $form->sessionMessage($validationMessages, 'bad');
             return null;
@@ -579,7 +580,7 @@ class MemberProfilePageController extends PageController
                 }
             }
 
-            if ($emails) {
+            if ($emails !== []) {
                 $emails = array_unique($emails);
 
                 $mail    = Email::create($this->EmailFrom);
@@ -591,7 +592,7 @@ class MemberProfilePageController extends PageController
                     '?token=' . $member->ValidationKey
                 );
 
-                $mail->setSubject("Registration Approval Requested for $config->Title");
+                $mail->setSubject('Registration Approval Requested for ' . $config->Title);
                 $mail->setHTMLTemplate('Symbiote\\MemberProfiles\\Email\\MemberRequiresApprovalEmail');
                 $mail->setData([
                     'SiteConfig'  => $config,
@@ -675,7 +676,11 @@ class MemberProfilePageController extends PageController
                 $memberField->setSource($availableGroups);
             }
 
-            if (!$memberField || $visibility == 'Hidden') {
+            if (!$memberField) {
+                continue;
+            }
+
+            if ($visibility == 'Hidden') {
                 continue;
             }
 
@@ -690,6 +695,7 @@ class MemberProfilePageController extends PageController
             if ($fieldTitle) {
                 $field->setTitle($fieldTitle);
             }
+
             if ($profileField->Note) {
                 $field->setDescription($profileField->Note);
             }

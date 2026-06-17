@@ -15,7 +15,7 @@ use SilverStripe\Model\ArrayData;
  */
 class MemberProfileFieldsSection extends MemberProfileSection
 {
-    private static $table_name = 'MemberProfileFieldsSection';
+    private static string $table_name = 'MemberProfileFieldsSection';
 
     public function getDefaultTitle(): string
     {
@@ -28,17 +28,15 @@ class MemberProfileFieldsSection extends MemberProfileSection
         return $this->renderWith(MemberProfileFieldsSection::class);
     }
 
-    public function Fields()
+    public function Fields(): ArrayList
     {
         $fields = $this->Parent()->Fields()->where('"PublicVisibility" <> \'Hidden\'');
         $public = $this->getMember()->getPublicFields();
         $result = ArrayList::create();
 
         foreach ($fields as $field) {
-            if ($field->PublicVisibility == 'MemberChoice') {
-                if (!in_array($field->MemberField, $public)) {
-                    continue;
-                }
+            if ($field->PublicVisibility == 'MemberChoice' && !in_array($field->MemberField, $public)) {
+                continue;
             }
 
             $result->push(ArrayData::create([

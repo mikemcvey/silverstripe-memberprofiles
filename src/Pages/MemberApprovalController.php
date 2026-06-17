@@ -33,16 +33,15 @@ class MemberApprovalController extends PageController
      * of immediately approving after visiting the approve link.
      *
      * @config
-     * @var boolean
      */
-    private static $redirect_to_admin = false;
+    private static bool $redirect_to_admin = false;
 
     public function index($request)
     {
         $id    = (int)$request->param('ID');
         $token = $request->getVar('token');
 
-        if (!$id) {
+        if ($id === 0) {
             return $this->httpError(404, 'A member ID was not specified.');
         }
 

@@ -2,6 +2,8 @@
 
 namespace Symbiote\MemberProfiles\Extensions;
 
+use SilverStripe\Core\Extension;
+use SilverStripe\Core\Validation\ValidationResult;
 use Symbiote\MemberProfiles\Pages\MemberProfilePage;
 use Symbiote\MemberProfiles\Email\MemberConfirmationEmail;
 use SilverStripe\Forms\CheckboxSetField;
@@ -32,17 +34,17 @@ class MemberProfileExtension extends Extension
         'ProfilePage' => MemberProfilePage::class
     ];
 
-    public function getPublicFields()
+    public function getPublicFields(): array
     {
         return (array) unserialize($this->getOwner()->getField('PublicFieldsRaw') ?? '');
     }
 
-    public function setPublicFields($fields)
+    public function setPublicFields($fields): void
     {
         $this->getOwner()->setField('PublicFieldsRaw', serialize($fields));
     }
 
-    public function canLogIn(ValidationResult $result)
+    public function canLogIn(ValidationResult $result): void
     {
         if ($this->getOwner()->NeedsApproval) {
             $result->addError(_t(
@@ -61,7 +63,7 @@ class MemberProfileExtension extends Extension
     /**
      * Allows admin users to manually confirm a user.
      */
-    public function saveManualEmailValidation($value)
+    public function saveManualEmailValidation($value): void
     {
         if ($value === 'confirm') {
             $this->getOwner()->NeedsValidation = false;
@@ -76,7 +78,7 @@ class MemberProfileExtension extends Extension
         $this->getOwner()->ValidationKey = sha1(mt_rand() . mt_rand());
     }
 
-    public function onAfterWrite()
+    public function onAfterWrite(): void
     {
         $changed = $this->getOwner()->getChangedFields();
 
@@ -93,7 +95,7 @@ class MemberProfileExtension extends Extension
         }
     }
 
-    public function updateMemberFormFields($fields)
+    public function updateMemberFormFields($fields): void
     {
         $fields->removeByName('ValidationKey');
         $fields->removeByName('NeedsValidation');
@@ -107,7 +109,7 @@ class MemberProfileExtension extends Extension
         $fields->push(CheckboxSetField::create('Groups', 'Groups', [], $existing));
     }
 
-    public function updateCMSFields(FieldList $fields)
+    public function updateCMSFields(FieldList $fields): void
     {
         $fields->removeByName('ValidationKey');
         $fields->removeByName('NeedsValidation');

@@ -21,5 +21,11 @@ class MemberProfilesAddSectionAction_ItemRequest extends GridFieldDetailForm_Ite
                 urlencode($this->record::class)
             );
         }
+
+        return Controller::join_links(
+            $this->gridField->Link(),
+            'addsection',
+            urlencode(get_class($this->record))
+        );
     }
 }

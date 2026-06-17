@@ -18,6 +18,8 @@ use SilverStripe\Forms\FieldList;
  */
 class MemberProfileValidator extends RequiredFieldsValidator
 {
+    public Form $form;
+
     /**
      * @var array
      */
@@ -30,11 +32,10 @@ class MemberProfileValidator extends RequiredFieldsValidator
     public function __construct(protected $fields, protected $member = null)
     {
         foreach ($this->fields as $field) {
-            if ($field->Required) {
-                if ($field->ProfileVisibility !== 'Readonly') {
-                    $this->addRequiredField($field->MemberField);
-                }
+            if ($field->Required && $field->ProfileVisibility !== 'Readonly') {
+                $this->addRequiredField($field->MemberField);
             }
+
             if ($field->Unique) {
                 $this->unique[] = $field->MemberField;
             }
@@ -48,7 +49,7 @@ class MemberProfileValidator extends RequiredFieldsValidator
     /**
      * JavaScript validation is disabled on profile forms.
      */
-    public function javascript()
+    public function javascript(): null
     {
         return null;
     }
@@ -78,8 +79,10 @@ class MemberProfileValidator extends RequiredFieldsValidator
                 if ($current = Security::getCurrentUser()) {
                     $existing = $existing->filter(['ID:not' => $current->ID]);
                 }
+
                 $emailOK = !$existing->first();
             }
+
             if ($other && (!$member || !$member->exists() || $other->ID != $member->ID) || !$emailOK) {
                 $fieldInstance = $this->form->Fields()->dataFieldByName($field);
 

@@ -43,8 +43,8 @@ class MemberProfilesAddSectionAction extends GridFieldDetailForm implements Grid
             $links[Controller::join_links($base, $class)] = $title;
         }
 
-        Requirements::javascript('symbiote/silverstripe-memberprofiles: client/javascript/MemberProfilesAddSection.js');
-        Requirements::css('symbiote/silverstripe-memberprofiles: client/css/MemberProfilesAddSection.css');
+        Requirements::javascript('moritz-sauer-13/silverstripe-memberprofiles: client/javascript/MemberProfilesAddSection.js');
+        Requirements::css('moritz-sauer-13/silverstripe-memberprofiles: client/css/MemberProfilesAddSection.css');
 
         $select = DropdownField::create("{$grid->getName()}[SectionClass]", '', $links);
         $select->setEmptyString(_t('MemberProfiles.SECTIONTYPE', '(Section type)'));
@@ -81,7 +81,10 @@ class MemberProfilesAddSectionAction extends GridFieldDetailForm implements Grid
         return $handler->handleRequest($request);
     }
 
-    protected function getAddableSections($grid)
+    /**
+     * @return mixed[]
+     */
+    protected function getAddableSections($grid): array
     {
         $list    = $grid->getList();
         $classes = ClassInfo::subclassesFor(MemberProfileSection::class);

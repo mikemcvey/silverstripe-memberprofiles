@@ -21,12 +21,12 @@ use SilverStripe\Control\Controller;
  */
 class MemberProfileViewer extends PageController
 {
-    private static $url_handlers = [
+    private static array $url_handlers = [
         ''           => 'handleList',
         '$MemberID!' => 'handleView',
     ];
 
-    private static $allowed_actions = [
+    private static array $allowed_actions = [
         'handleList',
         'handleView',
     ];
@@ -46,7 +46,7 @@ class MemberProfileViewer extends PageController
      *
      * @return ModelData
      */
-    public function handleList($request)
+    public function handleList($request): ModelData
     {
         $parent = $this->getParent();
         $fields  = $parent->Fields()->filter('MemberListVisible', true);
@@ -63,6 +63,7 @@ class MemberProfileViewer extends PageController
             //
             //$members = $members->filter('ID:not', Permission::get_members_by_permission('ADMIN')->map('ID', 'ID')->toArray());
         }
+
         $members = PaginatedList::create($members, $request);
 
         $list = ArrayList::create();
@@ -93,6 +94,7 @@ class MemberProfileViewer extends PageController
                 'Fields' => $cols
             ]));
         }
+
         $list = PaginatedList::create($list, $request);
         $list->setLimitItems(false);
         $list->setTotalItems($members->getTotalItems());
@@ -113,7 +115,7 @@ class MemberProfileViewer extends PageController
      *
      * @return ModelDataCustomised
      */
-    public function handleView($request)
+    public function handleView($request): ModelData
     {
         $id = $request->param('MemberID');
 
@@ -158,7 +160,7 @@ class MemberProfileViewer extends PageController
     /**
      * @var MemberProfilePageController
      */
-    protected function getParent()
+    protected function getParent(): MemberProfilePageController
     {
         return $this->parent;
     }

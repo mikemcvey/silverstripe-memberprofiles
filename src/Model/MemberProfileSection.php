@@ -24,25 +24,25 @@ use Exception;
  */
 class MemberProfileSection extends DataObject
 {
-    private static $table_name = 'MemberProfileSection';
+    private static string $table_name = 'MemberProfileSection';
 
-    private static $db = [
+    private static array $db = [
         'CustomTitle' => 'Varchar(100)'
     ];
 
-    private static $has_one = [
+    private static array $has_one = [
         'Parent' => MemberProfilePage::class
     ];
 
-    private static $owned_by = [
+    private static array $owned_by = [
         'Parent',
     ];
 
-    private static $extensions = [
+    private static array $extensions = [
         Versioned::class . "('Stage', 'Live')"
     ];
 
-    private static $summary_fields = [
+    private static array $summary_fields = [
         'DefaultTitle' => 'Title',
         'CustomTitle'  => 'Custom Title'
     ];
@@ -63,7 +63,7 @@ class MemberProfileSection extends DataObject
     /**
      * @param Member $member
      */
-    public function setMember($member)
+    public function setMember($member): void
     {
         $this->member = $member;
     }
@@ -97,33 +97,27 @@ class MemberProfileSection extends DataObject
     /**
      * Returns the title for this profile section. You must implement this in
      * subclasses.
-     *
-     * @return string
      */
     public function getDefaultTitle(): string
     {
-        throw new Exception("Please implement getDefaultTitle() on {get_class($this)}.");
+        throw new Exception(sprintf('Please implement getDefaultTitle() on {get_class(%s)}.', $this));
     }
 
     /**
      * Controls whether the title is shown in the template.
-     *
-     * @return bool
      */
-    public function ShowTitle()
+    public function ShowTitle(): bool
     {
         return true;
     }
 
     /**
      * Returns the content to be rendered into the profile template.
-     *
-     * @return string
      */
     #[Override]
     public function forTemplate(): string
     {
-        throw new Exception("Please implement forTemplate() on {get_class($this)}.");
+        throw new Exception(sprintf('Please implement forTemplate() on {get_class(%s)}.', $this));
     }
 
     #[Override]

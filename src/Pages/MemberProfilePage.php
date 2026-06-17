@@ -111,7 +111,7 @@ class MemberProfilePage extends Page
         'Sections'
     ];
 
-    private static $cascade_deletes = [
+    private static array $cascade_deletes = [
         'Fields',
         'Sections',
     ];
@@ -134,7 +134,7 @@ class MemberProfilePage extends Page
         'ConfirmationContent'      => '<p>Your account is now active, and you have been logged in. Thank you!</p>'
     ];
 
-    private static $table_name = 'MemberProfilePage';
+    private static string $table_name = 'MemberProfilePage';
 
     /**
      * An array of default settings for some standard member fields.
@@ -445,10 +445,7 @@ class MemberProfilePage extends Page
         parent::onAfterWrite();
     }
 
-    /**
-     * @return bool
-     */
-    public function CanAddMembers()
+    public function CanAddMembers(): bool
     {
         return $this->AllowAdding && singleton(Member::class)->canCreate();
     }

@@ -97,6 +97,7 @@ class MemberConfirmationEmail extends Email
         if (!$emailFrom) {
             $emailFrom = Email::config()->get('admin_email');
         }
+
         $this->setFrom($emailFrom);
         $this->setTo($this->member->Email);
         $this->setSubject($this->getParsedString($this->page->EmailSubject));
@@ -107,12 +108,11 @@ class MemberConfirmationEmail extends Email
      * Replaces variables inside an email template according to {@link TEMPLATE_NOTE}.
      *
      * @param string $string
-     * @return string
      */
-    public function getParsedString($string)
+    public function getParsedString($string): string
     {
         $member = $this->getMember();
-        $page = $this->getPage();
+        $this->getPage();
 
         /**
          * @var DBDatetime $createdDateObj
@@ -129,7 +129,7 @@ class MemberConfirmationEmail extends Email
             '$ConfirmLink' => Controller::join_links(
                 $this->page->AbsoluteLink('confirm'),
                 $member->ID,
-                "?key={$member->ValidationKey}"
+                '?key=' . $member->ValidationKey
             ),
             '$LostPasswordLink' => Controller::join_links(
                 $absoluteBaseURL,
@@ -140,6 +140,7 @@ class MemberConfirmationEmail extends Email
         foreach (['Name', 'FirstName', 'Surname', 'Email'] as $field) {
             $variables["\$Member.$field"] = $member->$field;
         }
+
         $this->extend('updateEmailVariables', $variables);
 
         return str_replace(array_keys($variables), array_values($variables), $string);
@@ -152,18 +153,12 @@ class MemberConfirmationEmail extends Email
         return $absoluteBaseURL;
     }
 
-    /**
-     * @return MemberProfilePage
-     */
-    public function getPage()
+    public function getPage(): MemberProfilePage
     {
         return $this->page;
     }
 
-    /**
-     * @return Member
-     */
-    public function getMember()
+    public function getMember(): Member
     {
         return $this->member;
     }
