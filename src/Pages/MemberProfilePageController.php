@@ -2,7 +2,6 @@
 
 namespace Symbiote\MemberProfiles\Pages;
 
-use SilverStripe\Model\ModelData;
 use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\ORM\DataList;
@@ -24,7 +23,6 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\SpamProtection\Extension\FormSpamProtectionExtension;
 use SilverStripe\Security\Permission;
@@ -102,12 +100,12 @@ class MemberProfilePageController extends PageController
             ));
         }
 
-        $data = array(
+        $data = [
             'Type'    => 'Register',
             'Title'   => $this->obj('RegistrationTitle'),
             'Content' => $this->obj('RegistrationContent'),
             'Form'    => $this->RegisterForm()
-        );
+        ];
 
         return $this->customise($data);
     }
@@ -156,12 +154,12 @@ class MemberProfilePageController extends PageController
             }
         }
 
-        $data = array(
+        $data = [
             'Type'    => 'Profile',
             'Title'   => $this->obj('ProfileTitle'),
             'Content' => $this->obj('ProfileContent'),
             'Form'    => $form
-        );
+        ];
 
         return $this->customise($data);
     }
@@ -234,10 +232,10 @@ class MemberProfilePageController extends PageController
      */
     public function afterregistration(): array
     {
-        return array (
+        return [
             'Title'   => $this->obj('AfterRegistrationTitle'),
             'Content' => $this->obj('AfterRegistrationContent')
-        );
+        ];
     }
 
     /**
@@ -301,12 +299,12 @@ class MemberProfilePageController extends PageController
             ));
         }
 
-        $data = array(
+        $data = [
             'Type'    => 'Add',
             'Title'   => _t('MemberProfiles.ADDMEMBER', 'Add Member'),
             'Content' => '',
             'Form'    => $this->AddForm()
-        );
+        ];
 
         return $this->customise($data);
     }
@@ -368,8 +366,8 @@ class MemberProfilePageController extends PageController
         // we need to track the selected groups against the existing user's groups - this is
         // so that we don't accidentally remove them from the list of groups
         // a user might have been placed in via other means
-        $existingIds = array();
-        if ($member instanceof Member) {
+        $existingIds = [];
+        if ($member) {
             $existing = $member->Groups();
             if ($existing && $existing->count() > 0) {
                 $existingIds = $existing->map('ID', 'ID')->toArray();
@@ -382,8 +380,8 @@ class MemberProfilePageController extends PageController
         }
 
         if ($groupField) {
-            $givenIds = $groupField->Value();
-            $groupIds = array();
+            $givenIds = $groupField->getFormattedValue();
+            $groupIds = [];
             if ($givenIds) {
                 foreach ($givenIds as $givenId) {
                     if (isset($allowedIds[$givenId])) {
@@ -449,9 +447,9 @@ class MemberProfilePageController extends PageController
         /**
          * @var Member|null $member
          */
-        $member = DataObject::get_by_id(Member::class, $id);
+        $member = Member::get()->byID($id);
         if (!$member) {
-            return $this->invalidRequest('Member #'.$id.' does not exist.');
+            return $this->invalidRequest('Member #' . $id . ' does not exist.');
         }
 
         if (!$member->NeedsValidation) {
@@ -461,11 +459,11 @@ class MemberProfilePageController extends PageController
             // Email Setting 'Confirmation' rather than 'Validation' and you didn't
             // edit the original Email template to not include the copy about confirmation.
             //
-            return $this->invalidRequest('Member #'.$id.' does not need validation.');
+            return $this->invalidRequest('Member #' . $id . ' does not need validation.');
         }
 
         if (!$member->ValidationKey) {
-            return $this->invalidRequest('Member #'.$id.' does not have a validation key.');
+            return $this->invalidRequest('Member #' . $id . ' does not have a validation key.');
         }
 
         if ($member->ValidationKey !== $key) {
@@ -510,7 +508,7 @@ class MemberProfilePageController extends PageController
             //
             // Only expose additional information in 'dev' mode.
             //
-            $additionalText .= ' '.$debugText;
+            $additionalText .= ' ' . $debugText;
         }
 
         $this->getResponse()->setStatusCode(500);
@@ -519,7 +517,7 @@ class MemberProfilePageController extends PageController
             'Content' => _t(
                 'MemberProfiles.ERRORCONFIRMATION',
                 'An unexpected error occurred.'
-            ).$additionalText,
+            ) . $additionalText,
         ];
     }
 
@@ -596,11 +594,11 @@ class MemberProfilePageController extends PageController
 
                 $mail->setSubject('Registration Approval Requested for ' . $config->Title);
                 $mail->setHTMLTemplate('Symbiote\\MemberProfiles\\Email\\MemberRequiresApprovalEmail');
-                $mail->setData(array(
+                $mail->setData([
                     'SiteConfig'  => $config,
                     'Member'      => $member,
                     'ApproveLink' => Director::absoluteURL($approve)
-                ));
+                ]);
 
                 foreach ($emails as $email) {
                     if (!Email::is_valid_address($email)) {
@@ -647,8 +645,8 @@ class MemberProfilePageController extends PageController
         $fields        = FieldList::create();
 
         // depending on the context, load fields from the current member
-        if (Security::getCurrentUser() && $context != 'Add') {
-            $memberFields = Security::getCurrentUser()->getMemberFormFields();
+        if (($member = Security::getCurrentUser()) && $context != 'Add') {
+            $memberFields = $member->getMemberFormFields();
         } else {
             $memberFields = singleton(Member::class)->getMemberFormFields();
         }

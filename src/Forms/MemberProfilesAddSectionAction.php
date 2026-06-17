@@ -2,6 +2,7 @@
 
 namespace Symbiote\MemberProfiles\Forms;
 
+use Override;
 use SilverStripe\Model\ArrayData;
 use SilverStripe\Control\Controller;
 use SilverStripe\View\Requirements;
@@ -21,48 +22,42 @@ use SilverStripe\Forms\GridField\GridField_HTMLProvider;
 class MemberProfilesAddSectionAction extends GridFieldDetailForm implements GridField_HTMLProvider
 {
 
+    #[Override]
     public function getURLHandlers($gridField)
     {
-        return array(
-            'addsection/$ClassName!' => 'handleAddSection'
-        );
+        return ['addsection/$ClassName!' => 'handleAddSection'];
     }
 
     public function getHTMLFragments($grid)
     {
         $addable = $this->getAddableSections($grid);
         $base    = $grid->Link('addsection');
-        $links   = array();
+        $links   = [];
 
-        if ($addable === []) {
-            return array();
+        if (!$addable) {
+            return [];
         }
 
         foreach ($addable as $class => $title) {
-            $class = urlencode($class);
+            $class = urlencode((string) $class);
             $links[Controller::join_links($base, $class)] = $title;
         }
 
         Requirements::javascript('moritz-sauer-13/silverstripe-memberprofiles: client/javascript/MemberProfilesAddSection.js');
         Requirements::css('moritz-sauer-13/silverstripe-memberprofiles: client/css/MemberProfilesAddSection.css');
 
-        $select = DropdownField::create($grid->getName() . '[SectionClass]', '', $links);
+        $select = DropdownField::create("{$grid->getName()}[SectionClass]", '', $links);
         $select->setEmptyString(_t('MemberProfiles.SECTIONTYPE', '(Section type)'));
         $select->addExtraClass('no-change-track');
 
-        $data = ArrayData::create(array(
-            'Title'  => _t('MemberProfiles.ADDSECTION', 'Add Section'),
-            'Select' => $select
-        ));
+        $data = ArrayData::create(['Title'  => _t('MemberProfiles.ADDSECTION', 'Add Section'), 'Select' => $select]);
 
-        return array(
-            'buttons-before-left' => $data->renderWith('Symbiote\\MemberProfiles\\Model\\MemberProfilesAddSectionButton'),
-        );
+        return ['buttons-before-left' => $data->renderWith('Symbiote\\MemberProfiles\\Model\\MemberProfilesAddSectionButton')];
     }
 
     public function handleAddSection($grid, $request)
     {
-        $class = urldecode($request->param('ClassName'));
+        $class = urldecode((string) $request->param('ClassName'));
         if (!is_subclass_of($class, MemberProfileSection::class)) {
             return HTTPResponse::create('An invalid section type was specified', 404);
         }
@@ -93,8 +88,8 @@ class MemberProfilesAddSectionAction extends GridFieldDetailForm implements Grid
     {
         $list    = $grid->getList();
         $classes = ClassInfo::subclassesFor(MemberProfileSection::class);
-        $result  = array();
-        $grid->Link();
+        $result  = [];
+        $base    = $grid->Link();
 
         array_shift($classes);
         $classes = array_diff($classes, $list->column('ClassName'));

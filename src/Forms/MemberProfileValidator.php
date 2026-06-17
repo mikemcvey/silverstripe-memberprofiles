@@ -2,14 +2,14 @@
 
 namespace Symbiote\MemberProfiles\Forms;
 
-use SilverStripe\Forms\Form;
+use Override;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
+use SilverStripe\Security\Security;
+use Symbiote\MemberProfiles\Model\MemberProfileField;
+use SilverStripe\Security\Member;
 use SilverStripe\Core\Convert;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Security\Member;
-use SilverStripe\Security\Security;
-use Symbiote\MemberProfiles\Model\MemberProfileField;
-use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 
 /**
  * This validator provides the unique and required functionality for {@link MemberProfileField}s.
@@ -21,16 +21,6 @@ class MemberProfileValidator extends RequiredFieldsValidator
     public Form $form;
 
     /**
-     * @var FieldList|MemberProfileField[] $fields
-     */
-    protected $fields;
-
-    /**
-     * @var Member
-     */
-    protected $member;
-
-    /**
      * @var array
      */
     protected $unique = [];
@@ -39,11 +29,8 @@ class MemberProfileValidator extends RequiredFieldsValidator
      * @param FieldList|MemberProfileField[] $fields
      * @param Member|null $member
      */
-    public function __construct($fields, $member = null)
+    public function __construct(protected $fields, protected $member = null)
     {
-        $this->fields = $fields;
-        $this->member = $member;
-
         foreach ($this->fields as $field) {
             if ($field->Required && $field->ProfileVisibility !== 'Readonly') {
                 $this->addRequiredField($field->MemberField);
@@ -54,7 +41,7 @@ class MemberProfileValidator extends RequiredFieldsValidator
             }
         }
 
-        if ($member && $member->ID && $member->Password) {
+        if ($this->member && $this->member->ID && $this->member->Password) {
             $this->removeRequiredField('Password');
         }
     }
@@ -67,6 +54,7 @@ class MemberProfileValidator extends RequiredFieldsValidator
         return null;
     }
 
+    #[Override]
     public function php($data)
     {
         $member = $this->member;
@@ -84,12 +72,12 @@ class MemberProfileValidator extends RequiredFieldsValidator
             $isEmail = $field === 'Email';
             $emailOK = !$isEmail;
             if ($isEmail) {
-                $existing = Member::get()->filter('Email:nocase', $data['Email']);
+                $existing = Member::get()->filter(['Email:nocase' => $data['Email']]);
 
                 // This ensures the existing member isn't the same as the current member, in case they're updating information.
 
-                if ($current = Security::getCurrentUser()->ID) {
-                    $existing = $existing->filter('ID:not', $current);
+                if ($current = Security::getCurrentUser()) {
+                    $existing = $existing->filter(['ID:not' => $current->ID]);
                 }
 
                 $emailOK = !$existing->first();

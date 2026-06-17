@@ -2,11 +2,11 @@
 
 namespace Symbiote\MemberProfiles\Pages;
 
+use Override;
 use PageController;
 
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Security\Member;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Security;
 use SilverStripe\Admin\SecurityAdmin;
 use SilverStripe\Core\Convert;
@@ -20,13 +20,13 @@ use SilverStripe\ORM\FieldType\DBField;
 class MemberApprovalController extends PageController
 {
 
-    private static array $url_handlers = array(
+    private static $url_handlers = [
         '$ID' => 'index'
-    );
+    ];
 
-    private static array $allowed_actions = array(
+    private static $allowed_actions = [
         'index'
-    );
+    ];
 
     /**
      * Redirect the user to the 'admin/Security' member edit page instead
@@ -45,7 +45,7 @@ class MemberApprovalController extends PageController
             return $this->httpError(404, 'A member ID was not specified.');
         }
 
-        $member = DataObject::get_by_id(Member::class, $id);
+        $member = Member::get()->byID($id);
 
         if (!$member) {
             return $this->httpError(404, 'The specified member could not be found.');
@@ -67,10 +67,10 @@ class MemberApprovalController extends PageController
             $title   = _t('MemberProfiles.ALREADYAPPROVED', 'Already Approved');
             $content = _t('MemberProfiles.ALREADYAPPROVEDNOTE', 'This member has already been approved.');
 
-            return $this->render(array(
+            return $this->render([
                 'Title'   => $title,
-                'Content' => DBField::create_field('HTMLFragment', sprintf('<p>%s</p>', $content)),
-            ));
+                'Content' => DBField::create_field('HTMLFragment', "<p>$content</p>")
+            ]);
         }
 
         if (Config::inst()->get(self::class, 'redirect_to_admin')) {
@@ -78,8 +78,7 @@ class MemberApprovalController extends PageController
             if (!$controller->canView()) {
                 return Security::permissionFailure();
             }
-
-            $link = $controller->Link('EditForm/field/Members/item/'.$member->ID.'/edit#MemberProfileRegistrationApproval');
+            $link = $controller->Link('EditForm/field/Members/item/' . $member->ID . '/edit#MemberProfileRegistrationApproval');
             return $this->redirect($link);
         }
 
@@ -88,14 +87,15 @@ class MemberApprovalController extends PageController
 
         $title   = _t('MemberProfiles.MEMBERAPPROVED', 'Member Approved');
         $content = _t('MemberProfiles.MEMBERAPPROVEDCONTENT', 'The member "%s" has been approved and can now log in.');
-        $content = DBField::create_field('HTMLFragment', '<p>'.sprintf($content, Convert::raw2xml(sprintf('%s <%s>', $member->Name, $member->Email))).'</p>');
+        $content = DBField::create_field('HTMLFragment', '<p>' . sprintf($content, Convert::raw2xml("$member->Name <$member->Email>")) . '</p>');
 
-        return $this->render(array(
+        return $this->render([
             'Title'   => $title,
             'Content' => $content
-        ));
+        ]);
     }
 
+    #[Override]
     public function Link($action = null)
     {
         return Controller::join_links(Director::baseURL(), 'member-approval', $action);

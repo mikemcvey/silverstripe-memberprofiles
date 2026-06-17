@@ -2,6 +2,7 @@
 
 namespace Symbiote\MemberProfiles\Model;
 
+use Override;
 use Symbiote\MemberProfiles\Pages\MemberProfilePage;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Forms\ReadonlyField;
@@ -67,16 +68,17 @@ class MemberProfileSection extends DataObject
         $this->member = $member;
     }
 
+    #[Override]
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
 
         $fields->addFieldsToTab(
             'Root.Main',
-            array(
+            [
                 ReadonlyField::create('DefaultTitle', _t('MemberProfiles.SECTIONTYPE', 'Section type')),
                 HiddenField::create('ClassName', '')
-            ),
+            ],
             'CustomTitle'
         );
 
@@ -86,16 +88,17 @@ class MemberProfileSection extends DataObject
     /**
      * @return string
      */
+    #[Override]
     public function getTitle()
     {
-        return $this->CustomTitle ? $this->CustomTitle : $this->getDefaultTitle();
+        return $this->CustomTitle ?: $this->getDefaultTitle();
     }
 
     /**
      * Returns the title for this profile section. You must implement this in
      * subclasses.
      */
-    public function getDefaultTitle()
+    public function getDefaultTitle(): string
     {
         throw new Exception(sprintf('Please implement getDefaultTitle() on {get_class(%s)}.', $this));
     }
@@ -111,26 +114,31 @@ class MemberProfileSection extends DataObject
     /**
      * Returns the content to be rendered into the profile template.
      */
+    #[Override]
     public function forTemplate(): string
     {
         throw new Exception(sprintf('Please implement forTemplate() on {get_class(%s)}.', $this));
     }
 
+    #[Override]
     public function canEdit($member = null)
     {
         return $this->customExtendedCan(__FUNCTION__, $member);
     }
 
+    #[Override]
     public function canView($member = null)
     {
         return $this->customExtendedCan(__FUNCTION__, $member);
     }
 
-    public function canCreate($member = null, $context = array())
+    #[Override]
+    public function canCreate($member = null, $context = [])
     {
         return $this->customExtendedCan(__FUNCTION__, $member, $context);
     }
 
+    #[Override]
     public function canDelete($member = null)
     {
         return $this->customExtendedCan(__FUNCTION__, $member);
@@ -139,7 +147,7 @@ class MemberProfileSection extends DataObject
     /**
      * @return bool|null
      */
-    private function customExtendedCan(string $methodName, $member, $context = array())
+    private function customExtendedCan($methodName, $member, $context = [])
     {
         if (!$member) {
             $member = Security::getCurrentUser();

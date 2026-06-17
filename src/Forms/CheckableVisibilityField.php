@@ -2,6 +2,7 @@
 
 namespace Symbiote\MemberProfiles\Forms;
 
+use Override;
 use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\ORM\DataObjectInterface;
@@ -77,7 +78,8 @@ class CheckableVisibilityField extends FormField
      * @param array|MemberProfileExtension $data {@see Form::loadDataFrom}
      * @return $this
      */
-    public function setValue($value, $data = array())
+    #[Override]
+    public function setValue($value, $data = [])
     {
         $this->child->setValue($value);
 
@@ -97,7 +99,8 @@ class CheckableVisibilityField extends FormField
         return $this;
     }
 
-    public function saveInto(DataObjectInterface $record): void
+    #[Override]
+    public function saveInto(DataObjectInterface $record)
     {
         $child = clone $this->child;
         $child->setName($this->name);
@@ -110,30 +113,34 @@ class CheckableVisibilityField extends FormField
             $public = $record->getPublicFields();
 
             if ($this->checkbox->dataValue()) {
-                $public = array_merge($public, array($this->name));
+                $public = array_merge($public, [$this->name]);
             } else {
-                $public = array_diff($public, array($this->name));
+                $public = array_diff($public, [$this->name]);
             }
 
             $record->setPublicFields($public);
         }
     }
 
+    #[Override]
     public function validate(): ValidationResult
     {
         return $this->child->validate();
     }
 
-    public function Value()
+    #[Override]
+    public function getFormattedValue(): mixed
     {
-        return $this->child->Value();
+        return $this->child->getFormattedValue();
     }
 
+    #[Override]
     public function dataValue()
     {
         return $this->child->dataValue();
     }
 
+    #[Override]
     public function setForm($form)
     {
         $this->child->setForm($form);
@@ -146,7 +153,8 @@ class CheckableVisibilityField extends FormField
         return parent::setForm($form);
     }
 
-    public function Field($properties = array())
+    #[Override]
+    public function Field($properties = [])
     {
         return DBHTMLText::create_field(
             'HTMLFragment',
@@ -154,6 +162,7 @@ class CheckableVisibilityField extends FormField
         );
     }
 
+    #[Override]
     public function Title()
     {
         return $this->child->Title();

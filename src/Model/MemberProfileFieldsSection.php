@@ -2,6 +2,7 @@
 
 namespace Symbiote\MemberProfiles\Model;
 
+use Override;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\Model\ArrayData;
 
@@ -16,11 +17,12 @@ class MemberProfileFieldsSection extends MemberProfileSection
 {
     private static string $table_name = 'MemberProfileFieldsSection';
 
-    public function getDefaultTitle()
+    public function getDefaultTitle(): string
     {
         return _t('MemberProfiles.PROFILEFIELDSLIST', 'Profile Fields List');
     }
 
+    #[Override]
     public function forTemplate(): string
     {
         return $this->renderWith(MemberProfileFieldsSection::class);
@@ -37,16 +39,17 @@ class MemberProfileFieldsSection extends MemberProfileSection
                 continue;
             }
 
-            $result->push(ArrayData::create(array(
+            $result->push(ArrayData::create([
                 'Title' => $field->Title,
                 'Value' => $this->getMember()->{$field->MemberField}
-            )));
+            ]));
         }
 
         return $result;
     }
 
-    public function ShowTitle(): bool
+    #[Override]
+    public function ShowTitle()
     {
         return false;
     }

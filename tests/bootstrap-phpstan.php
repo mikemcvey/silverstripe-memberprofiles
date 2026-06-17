@@ -1,12 +1,15 @@
 <?php
 
+use SilverStripe\CMS\Controllers\ContentController;
+use SilverStripe\CMS\Model\SiteTree;
+
 // Handle local testing
-$PROJECT_DIR = dirname(__FILE__).'/../../../..';
+$PROJECT_DIR = __DIR__ . '/../../../..';
 $BOOTSTRAP_FILE = $PROJECT_DIR . '/vendor/silverstripe/cms/tests/bootstrap.php';
 if (!file_exists($BOOTSTRAP_FILE)) {
     // Handle Travis build
-    $PROJECT_DIR = dirname(__FILE__).'/..';
-    $BOOTSTRAP_FILE = $PROJECT_DIR.'/vendor/silverstripe/cms/tests/bootstrap.php';
+    $PROJECT_DIR = __DIR__ . '/..';
+    $BOOTSTRAP_FILE = $PROJECT_DIR . '/vendor/silverstripe/cms/tests/bootstrap.php';
 }
 
 require_once($BOOTSTRAP_FILE);
@@ -18,13 +21,15 @@ require_once($BOOTSTRAP_FILE);
 // system.
 //
 if (!class_exists(PageController::class)) {
-    class PageController extends \SilverStripe\CMS\Controllers\ContentController
+    class PageController extends ContentController
     {
     }
 }
 
 if (!class_exists(Page::class)) {
-    class Page extends \SilverStripe\CMS\Model\SiteTree
+    class Page extends SiteTree
     {
+        private static $table_name = 'Page';
+
     }
 }

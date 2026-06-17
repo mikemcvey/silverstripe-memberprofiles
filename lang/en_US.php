@@ -5,26 +5,26 @@ use Symbiote\MemberProfiles\Pages\MemberProfilePage;
 
 global $lang;
 
-$lang['en_US'][MemberProfileField::class]['PLURALNAME'] = array(
+$lang['en_US'][MemberProfileField::class]['PLURALNAME'] = [
 	'Member Profile Fields',
 	50,
 	'Pural name of the object, used in dropdowns and to generally identify a collection of this object in the interface'
-);
-$lang['en_US'][MemberProfileField::class]['SINGULARNAME'] = array(
+];
+$lang['en_US'][MemberProfileField::class]['SINGULARNAME'] = [
 	'Member Profile Field',
 	50,
 	'Singular name of the object, used in dropdowns and to generally identify a single object in the interface'
-);
-$lang['en_US'][MemberProfilePage::class]['PLURALNAME'] = array(
+];
+$lang['en_US'][MemberProfilePage::class]['PLURALNAME'] = [
 	'Member Profile Pags',
 	50,
 	'Pural name of the object, used in dropdowns and to generally identify a collection of this object in the interface'
-);
-$lang['en_US'][MemberProfilePage::class]['SINGULARNAME'] = array(
+];
+$lang['en_US'][MemberProfilePage::class]['SINGULARNAME'] = [
 	'Member Profile Page',
 	50,
 	'Singular name of the object, used in dropdowns and to generally identify a single object in the interface'
-);
+];
 $lang['en_US']['MemberProfiles']['AFTERRED'] = 'After Registration';
 $lang['en_US']['MemberProfiles']['REDIRECT_AFTER_REG'] = 'Redirect after registration?';
 $lang['en_US']['MemberProfiles']['REDIRECT_TARGET'] = 'Redirect to page';
@@ -63,11 +63,11 @@ $lang['en_US']['MemberProfiles']['UNCONFIRMED'] = 'Unconfirmed';
 $lang['en_US']['MemberProfiles']['VALIDATION'] = 'Validation';
 $lang['en_US']['MemberProfiles']['VALIDEMAILSUBJECT'] = 'Validation email subject';
 $lang['en_US']['MemberProfiles']['VALIDOPTIONS'] = 'Validation Options';
-$lang['en_US']['OrderableCTF.ss']['ADDITEM'] = array(
+$lang['en_US']['OrderableCTF.ss']['ADDITEM'] = [
 	'Add %s',
 	PR_MEDIUM,
 	'Add [name]'
-);
+];
 $lang['en_US']['OrderableCTF.ss']['CSVEXPORT'] = 'Export to CSV';
 $lang['en_US']['OrderableCTF.ss']['NOITEMSFOUND'] = 'No items found';
 $lang['en_US']['OrderableCTF.ss']['SORTASC'] = 'Sort ascending';

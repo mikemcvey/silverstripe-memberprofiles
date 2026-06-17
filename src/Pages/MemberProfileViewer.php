@@ -2,12 +2,14 @@
 
 namespace Symbiote\MemberProfiles\Pages;
 
-use SilverStripe\Model\ModelData;
 use SilverStripe\Model\List\PaginatedList;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\Model\ArrayData;
+use Override;
+use SilverStripe\Model\ModelData;
 use SilverStripe\Model\ModelDataCustomised;
 use PageController;
+use SilverStripe\Security\Security;
 use SilverStripe\Security\Member;
 use SilverStripe\Control\Controller;
 
@@ -29,27 +31,20 @@ class MemberProfileViewer extends PageController
         'handleView',
     ];
 
-    private MemberProfilePageController $parent;
-
     /**
-     * @var string
-     */
-    private $name;
-
-    /**
+     * @param MemberProfilePageController $parent
      * @param string $name
      */
-    public function __construct(MemberProfilePageController $parent, $name)
+    public function __construct(private readonly MemberProfilePageController $parent, private $name)
     {
-        $this->parent = $parent;
-        $this->name   = $name;
-
         parent::__construct();
     }
 
     /**
      * Displays a list of all members on the site that belong to the selected
      * groups.
+     *
+     * @return ModelData
      */
     public function handleList($request): ModelData
     {
@@ -86,18 +81,18 @@ class MemberProfileViewer extends PageController
                     $value = $member->{$field->MemberField};
                 }
 
-                $cols->push(ArrayData::create(array(
+                $cols->push(ArrayData::create([
                     'Name'     => $field->MemberField,
                     'Title'    => $field->Title,
                     'Value'    => $value,
                     'Sortable' => $member->hasDatabaseField($field->MemberField),
                     'Link'     => $link
-                )));
+                ]));
             }
 
-            $list->push($member->customise(array(
+            $list->push($member->customise([
                 'Fields' => $cols
-            )));
+            ]));
         }
 
         $list = PaginatedList::create($list, $request);
@@ -107,10 +102,12 @@ class MemberProfileViewer extends PageController
         $this->data()->Title  = _t('MemberProfiles.MEMBERLIST', 'Member List');
         $this->data()->Parent = $this->getParent();
 
-        return $this->customise(array(
+        $controller = $this->customise([
             'Type'    => 'List',
             'Members' => $list
-        ));
+        ]);
+
+        return $controller;
     }
 
     /**
@@ -122,7 +119,7 @@ class MemberProfileViewer extends PageController
     {
         $id = $request->param('MemberID');
 
-        if (!ctype_digit($id)) {
+        if (!ctype_digit((string) $id)) {
             $this->httpError(404);
         }
 
@@ -150,12 +147,14 @@ class MemberProfileViewer extends PageController
         );
         $this->data()->Parent = $this->getParent();
 
-        return $this->customise(array(
-            'Type'     => 'View',
-            'Member'   => $member,
+        $controller = $this->customise([
+            'Type' => 'View',
+            'Member' => $member,
             'Sections' => $sectionsList,
-            'IsSelf'   => $member->ID == Security::getCurrentUser()
-        ));
+            'IsSelf' => (($current = Security::getCurrentUser()) && $member->ID == $current->ID)
+        ]);
+
+        return $controller;
     }
 
     /**
@@ -191,6 +190,7 @@ class MemberProfileViewer extends PageController
     /**
      * @return string
      */
+    #[Override]
     public function Link($action = null)
     {
         return Controller::join_links($this->getParent()->Link(), $this->getName(), $action);
