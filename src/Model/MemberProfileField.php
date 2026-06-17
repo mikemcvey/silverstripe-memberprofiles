@@ -2,6 +2,10 @@
 
 namespace Symbiote\MemberProfiles\Model;
 
+use Override;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\CompositeField;
+use SilverStripe\Forms\SelectField;
 use Symbiote\MemberProfiles\Pages\MemberProfilePage;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Requirements;
@@ -30,7 +34,7 @@ use SilverStripe\Security\Permission;
  * @property bool $Unique
  * @property bool $Required
  * @property int $Sort
- * @method \Symbiote\MemberProfiles\Pages\MemberProfilePage ProfilePage()
+ * @method MemberProfilePage ProfilePage()
  */
 class MemberProfileField extends DataObject
 {
@@ -82,10 +86,11 @@ class MemberProfileField extends DataObject
      * It's declared as a static so all instances have access to it after it's
      * loaded the first time.
      *
-     * @var \SilverStripe\Forms\FieldList
+     * @var FieldList
      */
     protected static $member_fields;
 
+    #[Override]
     public function getCMSFields()
     {
         Requirements::javascript('symbiote/silverstripe-memberprofiles: client/javascript/MemberProfileFieldCMS.js');
@@ -99,7 +104,7 @@ class MemberProfileField extends DataObject
         $fields->removeByName('Sort');
 
         /**
-         * @var \SilverStripe\Forms\CompositeField|null $tab
+         * @var CompositeField|null $tab
          */
         $tab = $fields->fieldByName('Root.Main');
         if ($tab) {
@@ -118,39 +123,29 @@ class MemberProfileField extends DataObject
             ]);
         }
 
-        $fields->unshift(new ReadonlyField(
-            'MemberField',
-            _t('MemberProfiles.MEMBERFIELD', 'Member Field')
-        ));
+        $fields->unshift(ReadonlyField::create('MemberField', _t('MemberProfiles.MEMBERFIELD', 'Member Field')));
 
         $fields->insertBefore(
             'ProfileVisibility',
-            new HeaderField('VisibilityHeader', _t('MemberProfiles.VISIBILITY', 'Visibility'))
+            HeaderField::create('VisibilityHeader', _t('MemberProfiles.VISIBILITY', 'Visibility'))
         );
 
         $fields->insertBefore(
             'CustomError',
-            new HeaderField('ValidationHeader', _t('MemberProfiles.VALIDATION', 'Validation'))
+            HeaderField::create('ValidationHeader', _t('MemberProfiles.VALIDATION', 'Validation'))
         );
 
         if ($memberField instanceof DropdownField) {
-            $fields->replaceField('DefaultValue', $default = new DropdownField(
-                'DefaultValue',
-                _t('MemberProfiles.DEFAULTVALUE', 'Default Value'),
-                $memberField->getSource()
-            ));
+            $fields->replaceField('DefaultValue', $default = DropdownField::create('DefaultValue', _t('MemberProfiles.DEFAULTVALUE', 'Default Value'), $memberField->getSource()));
             $default->setEmptyString(' ');
         } elseif ($memberField instanceof TextField) {
-            $fields->replaceField('DefaultValue', new TextField(
-                'DefaultValue',
-                _t('MemberProfiles.DEFAULTVALUE', 'Default Value')
-            ));
+            $fields->replaceField('DefaultValue', TextField::create('DefaultValue', _t('MemberProfiles.DEFAULTVALUE', 'Default Value')));
         } else {
             $fields->removeByName('DefaultValue');
         }
 
         /**
-         * @var \SilverStripe\Forms\SelectField|null $publicVisibilityField
+         * @var SelectField|null $publicVisibilityField
          */
         $publicVisibilityField = $fields->dataFieldByName('PublicVisibility');
         if ($publicVisibilityField &&
@@ -190,6 +185,7 @@ class MemberProfileField extends DataObject
         return $fields;
     }
 
+    #[Override]
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
@@ -204,6 +200,7 @@ class MemberProfileField extends DataObject
      * @uses   MemberProfileField::getDefaultTitle
      * @return string
      */
+    #[Override]
     public function getTitle()
     {
         if ($this->CustomTitle) {
@@ -233,7 +230,7 @@ class MemberProfileField extends DataObject
     }
 
     /**
-     * @return \SilverStripe\Forms\FieldList
+     * @return FieldList
      */
     protected function getMemberFields()
     {
@@ -300,21 +297,25 @@ class MemberProfileField extends DataObject
         return $this->getField('MemberListVisible') && !$this->isNeverPublic();
     }
 
+    #[Override]
     public function canEdit($member = null)
     {
         return $this->customExtendedCan(__FUNCTION__, $member);
     }
 
+    #[Override]
     public function canView($member = null)
     {
         return $this->customExtendedCan(__FUNCTION__, $member);
     }
 
+    #[Override]
     public function canCreate($member = null, $context = [])
     {
         return $this->customExtendedCan(__FUNCTION__, $member, $context);
     }
 
+    #[Override]
     public function canDelete($member = null)
     {
         return $this->customExtendedCan(__FUNCTION__, $member);

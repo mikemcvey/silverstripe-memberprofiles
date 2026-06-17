@@ -2,16 +2,16 @@
 
 namespace Symbiote\MemberProfiles\Forms;
 
+use Override;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\Control\Controller;
 use SilverStripe\View\Requirements;
 use SilverStripe\Forms\DropdownField;
-use SilverStripe\View\ArrayData;
 use Symbiote\MemberProfiles\Model\MemberProfileSection;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Forms\GridField\GridFieldDetailForm;
 use SilverStripe\Forms\GridField\GridField_HTMLProvider;
-use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
 
 /**
  * A grid field section that allows one instance of each section subclass to be
@@ -22,6 +22,7 @@ use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
 class MemberProfilesAddSectionAction extends GridFieldDetailForm implements GridField_HTMLProvider
 {
 
+    #[Override]
     public function getURLHandlers($gridField)
     {
         return ['addsection/$ClassName!' => 'handleAddSection'];
@@ -45,11 +46,11 @@ class MemberProfilesAddSectionAction extends GridFieldDetailForm implements Grid
         Requirements::javascript('symbiote/silverstripe-memberprofiles: client/javascript/MemberProfilesAddSection.js');
         Requirements::css('symbiote/silverstripe-memberprofiles: client/css/MemberProfilesAddSection.css');
 
-        $select = new DropdownField("{$grid->getName()}[SectionClass]", '', $links);
+        $select = DropdownField::create("{$grid->getName()}[SectionClass]", '', $links);
         $select->setEmptyString(_t('MemberProfiles.SECTIONTYPE', '(Section type)'));
         $select->addExtraClass('no-change-track');
 
-        $data = new ArrayData(['Title'  => _t('MemberProfiles.ADDSECTION', 'Add Section'), 'Select' => $select]);
+        $data = ArrayData::create(['Title'  => _t('MemberProfiles.ADDSECTION', 'Add Section'), 'Select' => $select]);
 
         return ['buttons-before-left' => $data->renderWith('Symbiote\\MemberProfiles\\Model\\MemberProfilesAddSectionButton')];
     }
@@ -58,11 +59,11 @@ class MemberProfilesAddSectionAction extends GridFieldDetailForm implements Grid
     {
         $class = urldecode((string) $request->param('ClassName'));
         if (!is_subclass_of($class, MemberProfileSection::class)) {
-            return new HTTPResponse('An invalid section type was specified', 404);
+            return HTTPResponse::create('An invalid section type was specified', 404);
         }
 
         if (!array_key_exists($class, $this->getAddableSections($grid))) {
-            return new HTTPResponse('The section already exists', 400);
+            return HTTPResponse::create('The section already exists', 400);
         }
 
         $handler = $this->getItemRequestClass();

@@ -2,6 +2,7 @@
 
 namespace Symbiote\MemberProfiles\Model;
 
+use Override;
 use Symbiote\MemberProfiles\Pages\MemberProfilePage;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Forms\ReadonlyField;
@@ -19,7 +20,7 @@ use Exception;
  * @subpackage dataobjects
  * @property int $ParentID
  * @property string $CustomTitle
- * @method \Symbiote\MemberProfiles\Pages\MemberProfilePage Parent()
+ * @method MemberProfilePage Parent()
  */
 class MemberProfileSection extends DataObject
 {
@@ -67,6 +68,7 @@ class MemberProfileSection extends DataObject
         $this->member = $member;
     }
 
+    #[Override]
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
@@ -74,14 +76,8 @@ class MemberProfileSection extends DataObject
         $fields->addFieldsToTab(
             'Root.Main',
             [
-                new ReadonlyField(
-                    'DefaultTitle',
-                    _t('MemberProfiles.SECTIONTYPE', 'Section type')
-                ),
-                new HiddenField(
-                    'ClassName',
-                    ''
-                )
+                ReadonlyField::create('DefaultTitle', _t('MemberProfiles.SECTIONTYPE', 'Section type')),
+                HiddenField::create('ClassName', '')
             ],
             'CustomTitle'
         );
@@ -92,6 +88,7 @@ class MemberProfileSection extends DataObject
     /**
      * @return string
      */
+    #[Override]
     public function getTitle()
     {
         return $this->CustomTitle ?: $this->getDefaultTitle();
@@ -103,7 +100,7 @@ class MemberProfileSection extends DataObject
      *
      * @return string
      */
-    public function getDefaultTitle()
+    public function getDefaultTitle(): never
     {
         throw new Exception("Please implement getDefaultTitle() on {get_class($this)}.");
     }
@@ -123,26 +120,31 @@ class MemberProfileSection extends DataObject
      *
      * @return string
      */
+    #[Override]
     public function forTemplate()
     {
         throw new Exception("Please implement forTemplate() on {get_class($this)}.");
     }
 
+    #[Override]
     public function canEdit($member = null)
     {
         return $this->customExtendedCan(__FUNCTION__, $member);
     }
 
+    #[Override]
     public function canView($member = null)
     {
         return $this->customExtendedCan(__FUNCTION__, $member);
     }
 
+    #[Override]
     public function canCreate($member = null, $context = [])
     {
         return $this->customExtendedCan(__FUNCTION__, $member, $context);
     }
 
+    #[Override]
     public function canDelete($member = null)
     {
         return $this->customExtendedCan(__FUNCTION__, $member);

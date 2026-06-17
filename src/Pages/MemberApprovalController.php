@@ -2,11 +2,11 @@
 
 namespace Symbiote\MemberProfiles\Pages;
 
+use Override;
 use PageController;
 
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Security\Member;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Security;
 use SilverStripe\Admin\SecurityAdmin;
 use SilverStripe\Core\Convert;
@@ -46,7 +46,7 @@ class MemberApprovalController extends PageController
             return $this->httpError(404, 'A member ID was not specified.');
         }
 
-        $member = DataObject::get_by_id(Member::class, $id);
+        $member = Member::get()->byID($id);
 
         if (!$member) {
             return $this->httpError(404, 'The specified member could not be found.');
@@ -96,6 +96,7 @@ class MemberApprovalController extends PageController
         ]);
     }
 
+    #[Override]
     public function Link($action = null)
     {
         return Controller::join_links(Director::baseURL(), 'member-approval', $action);

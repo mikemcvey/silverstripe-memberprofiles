@@ -2,18 +2,16 @@
 
 namespace Symbiote\MemberProfiles\Pages;
 
+use SilverStripe\Model\List\PaginatedList;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
+use Override;
+use SilverStripe\Model\ModelData;
+use SilverStripe\Model\ModelDataCustomised;
 use PageController;
-
-use Exception;
-use SilverStripe\Control\RequestHandler;
-use SilverStripe\ORM\PaginatedList;
-use SilverStripe\ORM\ArrayList;
 use SilverStripe\Security\Security;
-use SilverStripe\View\ArrayData;
 use SilverStripe\Security\Member;
 use SilverStripe\Control\Controller;
-use SilverStripe\View\ViewableData;
-use SilverStripe\Security\Permission;
 
 /**
  * Handles displaying member's public profiles.
@@ -34,24 +32,11 @@ class MemberProfileViewer extends PageController
     ];
 
     /**
-     * @var MemberProfilePageController
-     */
-    private $parent;
-
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
      * @param MemberProfilePageController $parent
      * @param string $name
      */
-    public function __construct(MemberProfilePageController $parent, $name)
+    public function __construct(private readonly MemberProfilePageController $parent, private $name)
     {
-        $this->parent = $parent;
-        $this->name   = $name;
-
         parent::__construct();
     }
 
@@ -59,7 +44,7 @@ class MemberProfileViewer extends PageController
      * Displays a list of all members on the site that belong to the selected
      * groups.
      *
-     * @return ViewableData
+     * @return ModelData
      */
     public function handleList($request)
     {
@@ -80,9 +65,9 @@ class MemberProfileViewer extends PageController
         }
         $members = PaginatedList::create($members, $request);
 
-        $list = new ArrayList();
+        $list = ArrayList::create();
         foreach ($members as $member) {
-            $cols   = new ArrayList();
+            $cols   = ArrayList::create();
             $public = $member->getPublicFields();
             $link   = $this->Link($member->ID);
 
@@ -95,7 +80,7 @@ class MemberProfileViewer extends PageController
                     $value = $member->{$field->MemberField};
                 }
 
-                $cols->push(new ArrayData([
+                $cols->push(ArrayData::create([
                     'Name'     => $field->MemberField,
                     'Title'    => $field->Title,
                     'Value'    => $value,
@@ -126,7 +111,7 @@ class MemberProfileViewer extends PageController
     /**
      * Handles viewing an individual user's profile.
      *
-     * @return \SilverStripe\View\ViewableData_Customised
+     * @return ModelDataCustomised
      */
     public function handleView($request)
     {
@@ -147,7 +132,7 @@ class MemberProfileViewer extends PageController
         }
 
         $sections     = $this->getParent()->Sections();
-        $sectionsList = new ArrayList();
+        $sectionsList = ArrayList::create();
 
         foreach ($sections as $section) {
             $sectionsList->push($section);
@@ -203,6 +188,7 @@ class MemberProfileViewer extends PageController
     /**
      * @return string
      */
+    #[Override]
     public function Link($action = null)
     {
         return Controller::join_links($this->getParent()->Link(), $this->getName(), $action);

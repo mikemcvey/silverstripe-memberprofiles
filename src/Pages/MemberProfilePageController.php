@@ -2,14 +2,17 @@
 
 namespace Symbiote\MemberProfiles\Pages;
 
+use SilverStripe\Core\Validation\ValidationException;
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\ORM\DataList;
+use Symbiote\MemberProfiles\Model\MemberProfileField;
+use SilverStripe\Security\Group;
+use SilverStripe\Model\ModelDataCustomised;
 use PageController;
 use Exception;
-use Psr\Container\NotFoundExceptionInterface;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Control\Session;
 use SilverStripe\Security\IdentityStore;
 use SilverStripe\Security\Member;
-use SilverStripe\Security\Member_GroupSet;
 use SilverStripe\Security\Security;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\Controller;
@@ -20,13 +23,9 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
-use SilverStripe\ORM\ValidationException;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\SpamProtection\Extension\FormSpamProtectionExtension;
-use SilverStripe\View\Requirements;
 use SilverStripe\Security\Permission;
-use SilverStripe\View\ViewableData_Customised;
 use Symbiote\MemberProfiles\Email\MemberConfirmationEmail;
 use Symbiote\MemberProfiles\Forms\CheckableVisibilityField;
 use Symbiote\MemberProfiles\Forms\MemberProfileValidator;
@@ -54,11 +53,11 @@ use Symbiote\MemberProfiles\Forms\MemberProfileValidator;
  * @property string $ConfirmationTitle
  * @property string $ConfirmationContent
  * @property int $PostRegistrationTargetID
- * @method \SilverStripe\CMS\Model\SiteTree PostRegistrationTarget()
- * @method \SilverStripe\ORM\DataList|\Symbiote\MemberProfiles\Model\MemberProfileField[] Fields()
- * @method \SilverStripe\ORM\DataList|\SilverStripe\Security\Group[] Groups()
- * @method \SilverStripe\ORM\DataList|\SilverStripe\Security\Group[] SelectableGroups()
- * @method \SilverStripe\ORM\DataList|\SilverStripe\Security\Group[] ApprovalGroups()
+ * @method SiteTree PostRegistrationTarget()
+ * @method DataList|MemberProfileField[] Fields()
+ * @method DataList|Group[] Groups()
+ * @method DataList|Group[] SelectableGroups()
+ * @method DataList|Group[] ApprovalGroups()
  */
 class MemberProfilePageController extends PageController
 {
@@ -90,7 +89,7 @@ class MemberProfilePageController extends PageController
     /**
      * Allow users to register if registration is enabled.
      *
-     * @return HTTPResponse|ViewableData_Customised
+     * @return HTTPResponse|ModelDataCustomised
      */
     protected function indexRegister()
     {
@@ -118,7 +117,7 @@ class MemberProfilePageController extends PageController
      * If editing is disabled, but the current user can add users, then they
      * are redirected to the add user page.
      *
-     * @return HTTPResponse|ViewableData_Customised
+     * @return HTTPResponse|ModelDataCustomised
      */
     protected function indexProfile()
     {
@@ -183,15 +182,7 @@ class MemberProfilePageController extends PageController
      */
     public function RegisterForm()
     {
-        $form = new Form(
-            $this,
-            'RegisterForm',
-            $this->getProfileFields('Registration'),
-            new FieldList(
-                new FormAction('register', _t('MemberProfiles.REGISTER', 'Register'))
-            ),
-            new MemberProfileValidator($this->Fields())
-        );
+        $form = Form::create($this, 'RegisterForm', $this->getProfileFields('Registration'), FieldList::create(FormAction::create('register', _t('MemberProfiles.REGISTER', 'Register'))), MemberProfileValidator::create($this->Fields()));
 
         if (class_exists(FormSpamProtectionExtension::class)
             && $form->hasExtension(FormSpamProtectionExtension::class)) {
@@ -254,15 +245,7 @@ class MemberProfilePageController extends PageController
      */
     public function ProfileForm()
     {
-        $form = new Form(
-            $this,
-            'ProfileForm',
-            $this->getProfileFields('Profile'),
-            new FieldList(
-                new FormAction('save', _t('MemberProfiles.SAVE', 'Save'))
-            ),
-            new MemberProfileValidator($this->Fields(), Security::getCurrentUser())
-        );
+        $form = Form::create($this, 'ProfileForm', $this->getProfileFields('Profile'), FieldList::create(FormAction::create('save', _t('MemberProfiles.SAVE', 'Save'))), MemberProfileValidator::create($this->Fields(), Security::getCurrentUser()));
         $this->extend('updateProfileForm', $form);
         return $form;
     }
@@ -331,15 +314,7 @@ class MemberProfilePageController extends PageController
      */
     public function AddForm()
     {
-        $form = new Form(
-            $this,
-            'AddForm',
-            $this->getProfileFields('Add'),
-            new FieldList(
-                new FormAction('doAdd', _t('MemberProfiles.ADD', 'Add'))
-            ),
-            new MemberProfileValidator($this->Fields())
-        );
+        $form = Form::create($this, 'AddForm', $this->getProfileFields('Add'), FieldList::create(FormAction::create('doAdd', _t('MemberProfiles.ADD', 'Add'))), MemberProfileValidator::create($this->Fields()));
 
         $this->extend('updateAddForm', $form);
         return $form;
@@ -407,7 +382,7 @@ class MemberProfilePageController extends PageController
         }
 
         if ($groupField) {
-            $givenIds = $groupField->Value();
+            $givenIds = $groupField->getFormattedValue();
             $groupIds = [];
             if ($givenIds) {
                 foreach ($givenIds as $givenId) {
@@ -473,7 +448,7 @@ class MemberProfilePageController extends PageController
         /**
          * @var Member|null $member
          */
-        $member = DataObject::get_by_id(Member::class, $id);
+        $member = Member::get()->byID($id);
         if (!$member) {
             return $this->invalidRequest('Member #' . $id . ' does not exist.');
         }
@@ -555,7 +530,7 @@ class MemberProfilePageController extends PageController
      */
     protected function addMember($form)
     {
-        $member   = new Member();
+        $member   = Member::create();
         $groupIds = $this->getSettableGroupIdsFrom($form);
 
         $form->saveInto($member);
@@ -666,7 +641,7 @@ class MemberProfilePageController extends PageController
     protected function getProfileFields($context)
     {
         $profileFields = $this->Fields();
-        $fields        = new FieldList();
+        $fields        = FieldList::create();
 
         // depending on the context, load fields from the current member
         if (($member = Security::getCurrentUser()) && $context != 'Add') {
@@ -683,13 +658,10 @@ class MemberProfilePageController extends PageController
         if ($this->AllowProfileViewing
             && $profileFields->find('PublicVisibility', 'MemberChoice')
         ) {
-            $fields->push(new LiteralField(
-                'VisibilityNote',
-                '<p>' . _t(
-                    'MemberProfiles.CHECKVISNOTE',
-                    'Check fields below to make them visible on your public profile.'
-                ) . '</p>'
-            ));
+            $fields->push(LiteralField::create('VisibilityNote', '<p>' . _t(
+                'MemberProfiles.CHECKVISNOTE',
+                'Check fields below to make them visible on your public profile.'
+            ) . '</p>'));
         }
 
         foreach ($profileFields as $profileField) {
@@ -736,7 +708,7 @@ class MemberProfilePageController extends PageController
                 && $profileField->PublicVisibility != 'Hidden'
             );
             if ($canSetVisibility) {
-                $field = new CheckableVisibilityField($field);
+                $field = CheckableVisibilityField::create($field);
 
                 if ($profileField->PublicVisibility == 'Display') {
                     $field->makeAlwaysVisible();

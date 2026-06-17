@@ -9,8 +9,9 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\DropdownField;
-use SilverStripe\ORM\DataExtension;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Extension;
+use SilverStripe\Core\Validation\ValidationResult;
+
 
 /**
  * Adds validation fields to the Member object, as well as exposing the user's
@@ -18,7 +19,7 @@ use SilverStripe\ORM\ValidationResult;
  *
  * @package silverstripe-memberprofiles
  */
-class MemberProfileExtension extends DataExtension
+class MemberProfileExtension extends Extension
 {
     private static $db = [
         'ValidationKey' => 'Varchar(40)',
@@ -33,23 +34,23 @@ class MemberProfileExtension extends DataExtension
 
     public function getPublicFields()
     {
-        return (array) unserialize($this->owner->getField('PublicFieldsRaw') ?? '');
+        return (array) unserialize($this->getOwner()->getField('PublicFieldsRaw') ?? '');
     }
 
     public function setPublicFields($fields)
     {
-        $this->owner->setField('PublicFieldsRaw', serialize($fields));
+        $this->getOwner()->setField('PublicFieldsRaw', serialize($fields));
     }
 
     public function canLogIn(ValidationResult $result)
     {
-        if ($this->owner->NeedsApproval) {
+        if ($this->getOwner()->NeedsApproval) {
             $result->addError(_t(
                 'MemberProfiles.NEEDSAPPROVALTOLOGIN',
                 'An administrator must confirm your account before you can log in.'
             ));
         }
-        if ($this->owner->NeedsValidation) {
+        if ($this->getOwner()->NeedsValidation) {
             $result->addError(_t(
                 'MemberProfiles.NEEDSVALIDATIONTOLOGIN',
                 'You must validate your account before you can log in.'
@@ -63,30 +64,30 @@ class MemberProfileExtension extends DataExtension
     public function saveManualEmailValidation($value)
     {
         if ($value === 'confirm') {
-            $this->owner->NeedsValidation = false;
+            $this->getOwner()->NeedsValidation = false;
         } elseif ($value === 'resend') {
-            $email = MemberConfirmationEmail::create($this->owner->ProfilePage(), $this->owner);
+            $email = MemberConfirmationEmail::create($this->getOwner()->ProfilePage(), $this->getOwner());
             $email->send();
         }
     }
 
-    public function populateDefaults()
+    public function onAfterPopulateDefaults()
     {
-        $this->owner->ValidationKey = sha1(mt_rand() . mt_rand());
+        $this->getOwner()->ValidationKey = sha1(mt_rand() . mt_rand());
     }
 
     public function onAfterWrite()
     {
-        $changed = $this->owner->getChangedFields();
+        $changed = $this->getOwner()->getChangedFields();
 
         if (array_key_exists('NeedsApproval', $changed)) {
             $before = $changed['NeedsApproval']['before'];
             $after  = $changed['NeedsApproval']['after'];
-            $page   = $this->owner->ProfilePage();
+            $page   = $this->getOwner()->ProfilePage();
             $email  = $page->EmailType;
 
             if ($before == true && $after == false && $email != 'None') {
-                $email = MemberConfirmationEmail::create($page, $this->owner);
+                $email = MemberConfirmationEmail::create($page, $this->getOwner());
                 $email->send();
             }
         }
@@ -102,8 +103,8 @@ class MemberProfileExtension extends DataExtension
 
         // For now we just pass an empty array as the list of selectable groups -
         // it's up to anything that uses this to populate it appropriately
-        $existing = $this->owner->Groups();
-        $fields->push(new CheckboxSetField('Groups', 'Groups', [], $existing));
+        $existing = $this->getOwner()->Groups();
+        $fields->push(CheckboxSetField::create('Groups', 'Groups', [], $existing));
     }
 
     public function updateCMSFields(FieldList $fields)
@@ -121,7 +122,7 @@ class MemberProfileExtension extends DataExtension
         $fields->removeByName('ConfirmationHeader');
         $fields->removeByName('ConfirmationNote');
 
-        if ($this->owner->NeedsApproval) {
+        if ($this->getOwner()->NeedsApproval) {
             $note = _t(
                 'MemberProfiles.NOLOGINUNTILAPPROVED',
                 'This user has not yet been approved. They cannot log in until their account is approved.'
@@ -129,53 +130,30 @@ class MemberProfileExtension extends DataExtension
 
             $fields->addFieldsToTab('Root.Main', [
                 // ApprovalAnchor is used by MemberApprovalController (2017-02-01)
-                new LiteralField(
-                    'ApprovalAnchor',
-                    "<div id=\"MemberProfileRegistrationApproval\"></div>"
-                ),
-                new HeaderField(
-                    'ApprovalHeader',
-                    _t('MemberProfiles.REGAPPROVAL', 'Registration Approval')
-                ),
-                new LiteralField(
-                    'ApprovalNote',
-                    "<p>$note</p>"
-                ),
-                new DropdownField(
-                    'NeedsApproval',
-                    '',
-                    [
-                        true  => _t('MemberProfiles.DONOTCHANGE', 'Do not change'),
-                        false => _t('MemberProfiles.APPROVETHISMEMBER', 'Approve this member')
-                    ]
-                ),
+                LiteralField::create('ApprovalAnchor', "<div id=\"MemberProfileRegistrationApproval\"></div>"),
+                HeaderField::create('ApprovalHeader', _t('MemberProfiles.REGAPPROVAL', 'Registration Approval')),
+                LiteralField::create('ApprovalNote', "<p>$note</p>"),
+                DropdownField::create('NeedsApproval', '', [
+                    true  => _t('MemberProfiles.DONOTCHANGE', 'Do not change'),
+                    false => _t('MemberProfiles.APPROVETHISMEMBER', 'Approve this member')
+                ]),
             ]);
         }
 
-        if ($this->owner->NeedsValidation) {
+        if ($this->getOwner()->NeedsValidation) {
             $fields->addFieldsToTab(
                 'Root.Main',
                 [
-                    new HeaderField(
-                        'ConfirmationHeader',
-                        _t('MemberProfiles.EMAILCONFIRMATION', 'Email Confirmation')
-                    ),
-                    new LiteralField(
-                        'ConfirmationNote',
-                        '<p>' . _t(
-                            'MemberProfiles.NOLOGINTILLCONFIRMED',
-                            'The member cannot log in until their account is confirmed.'
-                        ) . '</p>'
-                    ),
-                    new DropdownField(
-                        'ManualEmailValidation',
-                        '',
-                        [
-                            'unconfirmed' => _t('MemberProfiles.UNCONFIRMED', 'Unconfirmed'),
-                            'resend' => _t('MemberProfiles.RESEND', 'Resend confirmation email'),
-                            'confirm' => _t('MemberProfiles.MANUALLYCONFIRM', 'Manually confirm')
-                        ]
-                    )
+                    HeaderField::create('ConfirmationHeader', _t('MemberProfiles.EMAILCONFIRMATION', 'Email Confirmation')),
+                    LiteralField::create('ConfirmationNote', '<p>' . _t(
+                        'MemberProfiles.NOLOGINTILLCONFIRMED',
+                        'The member cannot log in until their account is confirmed.'
+                    ) . '</p>'),
+                    DropdownField::create('ManualEmailValidation', '', [
+                        'unconfirmed' => _t('MemberProfiles.UNCONFIRMED', 'Unconfirmed'),
+                        'resend' => _t('MemberProfiles.RESEND', 'Resend confirmation email'),
+                        'confirm' => _t('MemberProfiles.MANUALLYCONFIRM', 'Manually confirm')
+                    ])
                 ]
             );
         }

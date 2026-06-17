@@ -2,10 +2,10 @@
 
 namespace Symbiote\MemberProfiles\Email;
 
+use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\Control\Director;
 use Symbiote\MemberProfiles\Pages\MemberProfilePage;
 use SilverStripe\Security\Member;
-use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Security\Security;
 use SilverStripe\Control\Controller;
@@ -18,16 +18,6 @@ use SilverStripe\Control\Email\Email;
  */
 class MemberConfirmationEmail extends Email
 {
-    /**
-     * @var Member|null
-     */
-    private $member = null;
-
-    /**
-     * @var MemberProfilePage
-     */
-    private $page = null;
-
     /**
      * The default confirmation email subject if none is provided.
      *
@@ -99,21 +89,18 @@ class MemberConfirmationEmail extends Email
      * @param MemberProfilePage $page
      * @param Member $member
      */
-    public function __construct(MemberProfilePage $page, Member $member)
+    public function __construct(private readonly MemberProfilePage $page, private readonly Member $member)
     {
         parent::__construct();
 
-        $this->page = $page;
-        $this->member = $member;
-
-        $emailFrom = $page->EmailFrom;
+        $emailFrom = $this->page->EmailFrom;
         if (!$emailFrom) {
             $emailFrom = Email::config()->get('admin_email');
         }
         $this->setFrom($emailFrom);
-        $this->setTo($member->Email);
-        $this->setSubject($this->getParsedString($page->EmailSubject));
-        $this->setBody($this->getParsedString($page->EmailTemplate));
+        $this->setTo($this->member->Email);
+        $this->setSubject($this->getParsedString($this->page->EmailSubject));
+        $this->setBody($this->getParsedString($this->page->EmailTemplate));
     }
 
     /**
@@ -128,7 +115,7 @@ class MemberConfirmationEmail extends Email
         $page = $this->getPage();
 
         /**
-         * @var \SilverStripe\ORM\FieldType\DBDatetime $createdDateObj
+         * @var DBDatetime $createdDateObj
          */
         $createdDateObj = $member->obj('Created');
 

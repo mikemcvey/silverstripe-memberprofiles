@@ -2,31 +2,22 @@
 
 namespace Symbiote\MemberProfiles\Forms;
 
+use Override;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 use SilverStripe\Security\Security;
 use Symbiote\MemberProfiles\Model\MemberProfileField;
 use SilverStripe\Security\Member;
 use SilverStripe\Core\Convert;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\RequiredFields;
 
 /**
  * This validator provides the unique and required functionality for {@link MemberProfileField}s.
  *
  * @package silverstripe-memberprofiles
  */
-class MemberProfileValidator extends RequiredFields
+class MemberProfileValidator extends RequiredFieldsValidator
 {
-    /**
-     * @var FieldList|MemberProfileField[] $fields
-     */
-    protected $fields;
-
-    /**
-     * @var Member
-     */
-    protected $member;
-
     /**
      * @var array
      */
@@ -36,13 +27,8 @@ class MemberProfileValidator extends RequiredFields
      * @param FieldList|MemberProfileField[] $fields
      * @param Member|null $member
      */
-    public function __construct($fields, $member = null)
+    public function __construct(protected $fields, protected $member = null)
     {
-        parent::__construct();
-
-        $this->fields = $fields;
-        $this->member = $member;
-
         foreach ($this->fields as $field) {
             if ($field->Required) {
                 if ($field->ProfileVisibility !== 'Readonly') {
@@ -54,7 +40,7 @@ class MemberProfileValidator extends RequiredFields
             }
         }
 
-        if ($member && $member->ID && $member->Password) {
+        if ($this->member && $this->member->ID && $this->member->Password) {
             $this->removeRequiredField('Password');
         }
     }
@@ -67,6 +53,7 @@ class MemberProfileValidator extends RequiredFields
         return null;
     }
 
+    #[Override]
     public function php($data)
     {
         $member = $this->member;
@@ -84,12 +71,12 @@ class MemberProfileValidator extends RequiredFields
             $isEmail = $field === 'Email';
             $emailOK = !$isEmail;
             if ($isEmail) {
-                $existing = Member::get()->filter('Email:nocase', $data['Email']);
+                $existing = Member::get()->filter(['Email:nocase' => $data['Email']]);
 
                 // This ensures the existing member isn't the same as the current member, in case they're updating information.
 
                 if ($current = Security::getCurrentUser()) {
-                    $existing = $existing->filter('ID:not', $current->ID);
+                    $existing = $existing->filter(['ID:not' => $current->ID]);
                 }
                 $emailOK = !$existing->first();
             }

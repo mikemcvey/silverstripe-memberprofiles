@@ -3,10 +3,8 @@
 namespace Symbiote\MemberProfiles\Tests;
 
 use SilverStripe\Security\Member;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\Admin\SecurityAdmin;
 use SilverStripe\Security\Group;
-use SilverStripe\Forms\Form;
 use SilverStripe\Control\Controller;
 use SilverStripe\Dev\FunctionalTest;
 
@@ -34,7 +32,7 @@ class MemberConfirmationAdminTest extends FunctionalTest
             ]
         );
 
-        $member = DataObject::get_by_id(Member::class, $member->ID);
+        $member = Member::get()->byID($member->ID);
         $this->assertEquals(false, (bool) $member->NeedsValidation);
     }
 
@@ -52,7 +50,7 @@ class MemberConfirmationAdminTest extends FunctionalTest
             ]
         );
 
-        $member = DataObject::get_by_id(Member::class, $member->ID);
+        $member = Member::get()->byID($member->ID);
         $this->assertEquals(true, (bool) $member->NeedsValidation);
 
         $this->assertEmailSent($member->Email);
@@ -61,7 +59,7 @@ class MemberConfirmationAdminTest extends FunctionalTest
     private function getSecurityAdmin()
     {
         $member = $this->objFromFixture(Member::class, 'unconfirmed');
-        $admin  = new SecurityAdmin();
+        $admin  = SecurityAdmin::create();
         $group  = $this->objFromFixture(Group::class, 'group');
 
         //Form::disable_all_security_tokens(); // NOTE(Jake): Not in SS3 / shouldn't be testing with this anyway?

@@ -2,8 +2,9 @@
 
 namespace Symbiote\MemberProfiles\Model;
 
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\View\ArrayData;
+use Override;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
 
 /**
  * A profile section that displays a list of fields that have been marked as
@@ -21,6 +22,7 @@ class MemberProfileFieldsSection extends MemberProfileSection
         return _t('MemberProfiles.PROFILEFIELDSLIST', 'Profile Fields List');
     }
 
+    #[Override]
     public function forTemplate()
     {
         return $this->renderWith(MemberProfileFieldsSection::class);
@@ -30,7 +32,7 @@ class MemberProfileFieldsSection extends MemberProfileSection
     {
         $fields = $this->Parent()->Fields()->where('"PublicVisibility" <> \'Hidden\'');
         $public = $this->getMember()->getPublicFields();
-        $result = new ArrayList();
+        $result = ArrayList::create();
 
         foreach ($fields as $field) {
             if ($field->PublicVisibility == 'MemberChoice') {
@@ -39,7 +41,7 @@ class MemberProfileFieldsSection extends MemberProfileSection
                 }
             }
 
-            $result->push(new ArrayData([
+            $result->push(ArrayData::create([
                 'Title' => $field->Title,
                 'Value' => $this->getMember()->{$field->MemberField}
             ]));
@@ -48,6 +50,7 @@ class MemberProfileFieldsSection extends MemberProfileSection
         return $result;
     }
 
+    #[Override]
     public function ShowTitle()
     {
         return false;

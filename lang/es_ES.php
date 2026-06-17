@@ -21,26 +21,26 @@ if(array_key_exists('es_ES', $lang) && is_array($lang['es_ES'])) {
 	$lang['es_ES'] = $lang['en_US'];
 }
 
-$lang['es_ES'][MemberProfileField::class]['PLURALNAME'] = array(
+$lang['es_ES'][MemberProfileField::class]['PLURALNAME'] = [
 	'Campos del Perfil del Miembro',
 	50,
 	'Nombre del objeto en plural, usado en las listas y generalmente identifica una coleccion de este objeto en la interface'
-);
-$lang['es_ES'][MemberProfileField::class]['SINGULARNAME'] = array(
+];
+$lang['es_ES'][MemberProfileField::class]['SINGULARNAME'] = [
 	'Campo del perfil del miembro',
 	50,
 	'Nombre del objeto en singular, usado en las listas y generalmente identifica un único objeto en la interface'
-);
-$lang['es_ES'][MemberProfilePage::class]['PLURALNAME'] = array(
+];
+$lang['es_ES'][MemberProfilePage::class]['PLURALNAME'] = [
 	'Páginas del Perfil del Miembro',
 	50,
 	'Nombre del objeto en plural, usado en las listas y generalmente identifica una coleccion de este objeto en la interface'
-);
-$lang['es_ES'][MemberProfilePage::class]['SINGULARNAME'] = array(
+];
+$lang['es_ES'][MemberProfilePage::class]['SINGULARNAME'] = [
 	'Página del Perfil del Miembro',
 	50,
 	'Nombre del objeto en singular, usado en las listas y generalmente identifica un único objeto en la interface'
-);
+];
 
 $lang['es_ES']['MemberProfiles']['AFTERRED'] = 'Después de la inscripción';
 $lang['es_ES']['MemberProfiles']['REDIRECT_AFTER_REG'] = 'Redireccionar después de la inscripción?';
@@ -81,11 +81,11 @@ $lang['es_ES']['MemberProfiles']['VALIDATION'] = 'Validación';
 $lang['es_ES']['MemberProfiles']['VALIDEMAILSUBJECT'] = 'Asunto del correo electrónico de validación';
 $lang['es_ES']['MemberProfiles']['VALIDOPTIONS'] = 'Opciones de validación';
 
-$lang['es_ES']['OrderableCTF.ss']['ADDITEM'] = array(
+$lang['es_ES']['OrderableCTF.ss']['ADDITEM'] = [
 	'Adicionar %s',
 	PR_MEDIUM,
 	'Adicionar [nombre]'
-);
+];
 
 $lang['es_ES']['OrderableCTF.ss']['CSVEXPORT'] = 'Exportar a CSV';
 $lang['es_ES']['OrderableCTF.ss']['NOITEMSFOUND'] = 'No se encontraron elementos ';

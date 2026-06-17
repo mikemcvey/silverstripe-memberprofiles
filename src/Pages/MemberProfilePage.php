@@ -2,6 +2,8 @@
 
 namespace Symbiote\MemberProfiles\Pages;
 
+use Override;
+use SilverStripe\ORM\DataList;
 use Page;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Security\Security;
@@ -33,7 +35,6 @@ use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\TreeDropdownField;
 use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\UnsavedRelationList;
-use SilverStripe\ORM\ValidationResult;
 
 /**
  * A MemberProfilePage allows the administratior to set up a page with a subset of the
@@ -66,11 +67,11 @@ use SilverStripe\ORM\ValidationResult;
  * @property string $ConfirmationTitle
  * @property string $ConfirmationContent
  * @property int $PostRegistrationTargetID
- * @method \SilverStripe\CMS\Model\SiteTree PostRegistrationTarget()
- * @method \SilverStripe\ORM\DataList|\SilverStripe\Security\Group[] Groups()
- * @method \SilverStripe\ORM\DataList|\SilverStripe\Security\Group[] SelectableGroups()
- * @method \SilverStripe\ORM\DataList|\SilverStripe\Security\Group[] ApprovalGroups()
- * @method \SilverStripe\ORM\HasManyList|MemberProfileFieldsSection[] Sections()
+ * @method SiteTree PostRegistrationTarget()
+ * @method DataList|Group[] Groups()
+ * @method DataList|Group[] SelectableGroups()
+ * @method DataList|Group[] ApprovalGroups()
+ * @method HasManyList|MemberProfileFieldsSection[] Sections()
  */
 class MemberProfilePage extends Page
 {
@@ -168,9 +169,9 @@ class MemberProfilePage extends Page
         ]
     ];
 
-    private static $description = '';
+    private static $class_description = '';
 
-    private static $icon = 'symbiote/silverstripe-memberprofiles: client/images/memberprofilepage.png';
+    private static $cms_icon = 'symbiote/silverstripe-memberprofiles: client/images/memberprofilepage.png';
 
     /**
      * If profile editing is disabled, but the current user can add members,
@@ -178,6 +179,7 @@ class MemberProfilePage extends Page
      *
      * @param string $action
      */
+    #[Override]
     public function Link($action = null)
     {
         if (!$action
@@ -191,50 +193,20 @@ class MemberProfilePage extends Page
         return parent::Link($action);
     }
 
+    #[Override]
     public function getCMSFields()
     {
         $this->beforeUpdateCMSFields(function (FieldList $fields) {
-            $fields->addFieldToTab('Root', new TabSet('Profile', _t('MemberProfiles.PROFILE', 'Profile')));
-            $fields->addFieldToTab('Root', new Tab('ContentBlocks', _t('MemberProfiles.CONTENTBLOCKS', 'Content Blocks')));
-            $fields->addFieldToTab('Root', new Tab('Email', _t('MemberProfiles.Email', 'Email')));
+            $fields->addFieldToTab('Root', TabSet::create('Profile', _t('MemberProfiles.PROFILE', 'Profile')));
+            $fields->addFieldToTab('Root', Tab::create('ContentBlocks', _t('MemberProfiles.CONTENTBLOCKS', 'Content Blocks')));
+            $fields->addFieldToTab('Root', Tab::create('Email', _t('MemberProfiles.Email', 'Email')));
             $fields->fieldByName('Root.Main')->setTitle(_t('MemberProfiles.MAIN', 'Main'));
 
-            $fields->addFieldsToTab('Root.Profile', [new Tab(
-                'Fields',
-                _t('MemberProfiles.FIELDS', 'Fields'),
-                new GridField(
-                    'Fields',
-                    _t('MemberProfiles.PROFILEFIELDS', 'Profile Fields'),
-                    $this->Fields(),
-                    $grid = GridFieldConfig_RecordEditor::create()
-                        ->removeComponentsByType(GridFieldDeleteAction::class)
-                        ->removeComponentsByType(GridFieldAddNewButton::class)
-                )
-            ), new Tab(
-                'Groups',
-                _t('MemberProfiles.GROUPS', 'Groups'),
-                $groups = new TreeMultiselectField(
-                    'Groups',
-                    _t('MemberProfiles.GROUPS', 'Groups'),
-                    Group::class
-                ),
-                $selectable = new TreeMultiselectField(
-                    'SelectableGroups',
-                    _t('MemberProfiles.SELECTABLEGROUPS', 'Selectable Groups'),
-                    Group::class
-                )
-            ), new Tab(
-                'PublicProfile',
-                _t('MemberProfiles.PUBLICPROFILE', 'Public Profile'),
-                new GridField(
-                    'Sections',
-                    _t('MemberProfiles.PROFILESECTIONS', 'Profile Sections'),
-                    $this->Sections(),
-                    GridFieldConfig_RecordEditor::create()
-                        ->removeComponentsByType(GridFieldAddNewButton::class)
-                        ->addComponent(new MemberProfilesAddSectionAction())
-                )
-            )]);
+            $fields->addFieldsToTab('Root.Profile', [Tab::create('Fields', _t('MemberProfiles.FIELDS', 'Fields'), GridField::create('Fields', _t('MemberProfiles.PROFILEFIELDS', 'Profile Fields'), $this->Fields(), $grid = GridFieldConfig_RecordEditor::create()
+                ->removeComponentsByType(GridFieldDeleteAction::class)
+                ->removeComponentsByType(GridFieldAddNewButton::class))), Tab::create('Groups', _t('MemberProfiles.GROUPS', 'Groups'), $groups = TreeMultiselectField::create('Groups', _t('MemberProfiles.GROUPS', 'Groups'), Group::class), $selectable = TreeMultiselectField::create('SelectableGroups', _t('MemberProfiles.SELECTABLEGROUPS', 'Selectable Groups'), Group::class)), Tab::create('PublicProfile', _t('MemberProfiles.PUBLICPROFILE', 'Public Profile'), GridField::create('Sections', _t('MemberProfiles.PROFILESECTIONS', 'Profile Sections'), $this->Sections(), GridFieldConfig_RecordEditor::create()
+                ->removeComponentsByType(GridFieldAddNewButton::class)
+                ->addComponent(MemberProfilesAddSectionAction::create())))]);
 
             /* @var GridFieldDataColumns $dataColumns */
             $dataColumns = $grid->getComponentByType(GridFieldDataColumns::class);
@@ -248,7 +220,7 @@ class MemberProfilePage extends Page
             if (class_exists(GridFieldOrderableRows::class)) {
                 $grid->addComponent(GridFieldOrderableRows::create('Sort'));
             } elseif (class_exists(GridFieldSortableRows::class)) {
-                $grid->addComponent(new GridFieldSortableRows('Sort'));
+                $grid->addComponent(GridFieldSortableRows::create('Sort'));
             }
 
 
@@ -350,11 +322,12 @@ class MemberProfilePage extends Page
         return parent::getCMSFields();
     }
 
+    #[Override]
     public function getSettingsFields()
     {
         $fields = parent::getSettingsFields();
 
-        $fields->addFieldToTab('Root', new Tab('Profile'), 'Settings');
+        $fields->addFieldToTab('Root', Tab::create('Profile'), 'Settings');
         $fields->addFieldsToTab(
             'Root.Profile',
             [
@@ -446,7 +419,7 @@ class MemberProfilePage extends Page
 
         foreach ($fields as $name => $field) {
             if (!in_array($name, $included)) {
-                $profileField = new MemberProfileField();
+                $profileField = MemberProfileField::create();
                 $profileField->MemberField = $name;
 
                 if (isset(self::$profile_field_defaults[$name])) {
@@ -460,10 +433,11 @@ class MemberProfilePage extends Page
         return $list;
     }
 
+    #[Override]
     public function onAfterWrite()
     {
         if ($this->isChanged('ID', 2)) {
-            $section = new MemberProfileFieldsSection();
+            $section = MemberProfileFieldsSection::create();
             $section->ParentID = $this->ID;
             $section->write();
         }

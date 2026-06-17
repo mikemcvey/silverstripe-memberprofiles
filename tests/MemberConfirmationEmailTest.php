@@ -2,13 +2,13 @@
 
 namespace Symbiote\MemberProfiles\Tests;
 
+use SilverStripe\ORM\FieldType\DBDatetime;
 use Symbiote\MemberProfiles\Pages\MemberProfilePage;
 use Symbiote\MemberProfiles\Email\MemberConfirmationEmail;
 use SilverStripe\Security\Member;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Security\Security;
 use SilverStripe\Control\Controller;
-use SilverStripe\Control\Director;
 use SilverStripe\Dev\SapphireTest;
 
 /**
@@ -26,8 +26,8 @@ class MemberConfirmationEmailTest extends SapphireTest
      */
     public function testGetParsedString()
     {
-        $page   = new MemberProfilePage();
-        $member = new Member();
+        $page   = MemberProfilePage::create();
+        $member = Member::create();
 
         $member->Email     = 'email@domain.com';
         $member->FirstName = 'Test';
@@ -35,7 +35,7 @@ class MemberConfirmationEmailTest extends SapphireTest
         $member->write();
 
         /**
-         * @var \SilverStripe\ORM\FieldType\DBDatetime $createdObj
+         * @var DBDatetime $createdObj
          */
         $createdObj = $member->dbObject('Created');
 
@@ -53,7 +53,7 @@ class MemberConfirmationEmailTest extends SapphireTest
 			</li>
 		</ul>';
 
-        $email = new MemberConfirmationEmail($page, $member);
+        $email = MemberConfirmationEmail::create($page, $member);
         $loginLink = Controller::join_links(
             $email->BaseURL(),
             singleton(Security::class)->Link('login')
