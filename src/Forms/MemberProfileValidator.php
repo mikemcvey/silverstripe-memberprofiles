@@ -29,7 +29,7 @@ class MemberProfileValidator extends RequiredFieldsValidator
      * @param FieldList|MemberProfileField[] $fields
      * @param Member|null $member
      */
-    public function __construct(protected $fields, protected $member = null)
+    public function __construct(protected $fields, protected ?Member $member = null)
     {
         foreach ($this->fields as $field) {
             if ($field->Required && $field->ProfileVisibility !== 'Readonly') {
