@@ -18,7 +18,7 @@ use SilverStripe\Forms\FieldList;
  */
 class MemberProfileValidator extends RequiredFieldsValidator
 {
-    public Form $form;
+    // remove for SS6? public Form $form;
 
     /**
      * @var array
