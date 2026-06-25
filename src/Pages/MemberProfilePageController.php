@@ -352,7 +352,7 @@ class MemberProfilePageController extends PageController
      * groups that the user has selected are not validated against the list of groups the user is
      * allowed to choose from.
      */
-    protected function getSettableGroupIdsFrom(Form $form, Member $member = null)
+    protected function getSettableGroupIdsFrom(Form $form, ?Member $member = null)
     {
         // first off check to see if groups were selected by the user. If so, we want
         // to remove that control from the form list (just in case someone's sent through an
