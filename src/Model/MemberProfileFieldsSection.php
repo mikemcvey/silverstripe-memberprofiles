@@ -49,7 +49,7 @@ class MemberProfileFieldsSection extends MemberProfileSection
     }
 
     #[Override]
-    public function ShowTitle()
+    public function ShowTitle(): bool
     {
         return false;
     }
