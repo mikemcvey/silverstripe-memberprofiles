@@ -1,5 +1,5 @@
 {
-    "name": "moritz-sauer-13/silverstripe-memberprofiles",
+    "name": "symbiote/silverstripe-memberprofiles",
     "description": "Member registration and profile management",
     "type": "silverstripe-vendormodule",
     "keywords": [
